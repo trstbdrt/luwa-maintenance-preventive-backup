@@ -30,8 +30,8 @@ en DEC-11 et DEC-12 et dans `docs/reviews/build-readiness-v0.1.3.md`.
 
 | ID | Description | Priorité | Dépendances |
 |------|------|------|------|
-| DEC-11 | Fixer le mécanisme de génération du compteur NNNNNN de l'InspectionID (affichage uniquement, DEC-03) — bloque PA-07, pas le sprint SharePoint | P1 | — |
-| DEC-12 | Fixer la date de référence et les statuts concernés par l'archivage à 6 mois — bloque PAU-03 | P2 | — |
+| DEC-11 | **Décidée en v0.1.4** (`technical-decisions-v0.1.3.md`) : InspectionID temporaire pendant la saisie, définitif à la synchronisation. Restent ouverts : OQ-01, OQ-02, OQ-03 (`docs/build/open-questions.md`) | P1 | — |
+| DEC-12 | **Décidée en v0.1.4** (`technical-decisions-v0.1.3.md`) : date de référence DateDerniereModification. Restent ouverts : OQ-04, OQ-05 | P2 | — |
 | DEC-01 | Décider de l'usage de la colonne Title dans QUESTIONS, REGLES_FORMULAIRE et REPONSES | P1 | — |
 | DEC-02 | Fixer la valeur initiale de StatutTraitement à la création d'une inspection | P1 | — |
 | DEC-03 | Fixer le mécanisme de génération de l'InspectionID (`INS-AAAAMMJJ-NNNNNN`) et du ReponseID | P1 | — |
@@ -100,8 +100,8 @@ en DEC-11 et DEC-12 et dans `docs/reviews/build-readiness-v0.1.3.md`.
 |------|------|------|------|
 | PAU-01 | Export structuré : Export.zip contenant Export.xlsx et le dossier Photos/ | P1 | SP-08, SP-09, SP-10 |
 | PAU-02 | Export CSV des listes INSPECTIONS et REPONSES | P2 | PAU-01 |
-| PAU-03 | Archivage des inspections anciennes (cible 6 mois) : statut ARCHIVE, sans suppression | P2 | SP-08, DEC-12 |
-| PAU-04 | Génération de l'InspectionID côté serveur (si retenu en DEC-11) | P1 | DEC-11 |
+| PAU-03 | Archivage des inspections anciennes : statut ARCHIVE si Aujourd'hui - DateDerniereModification > 6 mois, sans suppression | P2 | SP-08, DEC-12, OQ-04, OQ-05 |
+| PAU-04 | Attribution de la valeur finale de l'InspectionID lors de la synchronisation SharePoint | P1 | DEC-11, OQ-02 |
 | PAU-05 | Création des dossiers photos `AAAA/MM/InspectionID/` (si non fait par Power Apps) | P2 | SP-10 |
 
 ---

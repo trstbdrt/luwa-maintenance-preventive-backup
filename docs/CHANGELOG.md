@@ -1,5 +1,18 @@
 # Changelog
 
+## Version 0.1.4
+
+Date : 2026-10-08
+
+Contenu :
+
+- Décision DEC-11 validée
+- Décision DEC-12 validée
+- SharePoint Build Checklist ajoutée
+- Power Apps Readiness ajoutée
+- Questions ouvertes consolidées (docs/build/open-questions.md)
+- Build Readiness Review révisée : Power Apps READY
+
 ## Version 0.1.3
 
 Date : 2026-10-08

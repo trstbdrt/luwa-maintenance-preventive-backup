@@ -1,13 +1,13 @@
 # LUWA Maintenance Preventive Backup
 ## Build Readiness Review v0.1.3
 
-Version : 0.1.3
+Version : 0.1.3 — révisée en v0.1.4
 
 Date : 2026-10-08
 
-Périmètre de la revue : **Sprint SharePoint** (construction des listes, de la bibliothèque et import des catalogues).
+Périmètre de la revue : **Sprint SharePoint** (construction des listes, de la bibliothèque et import des catalogues) et, depuis la révision v0.1.4, **démarrage du Sprint Power Apps**.
 
-Référentiel : tag `v0.1.3`.
+Référentiel : tag `v0.1.3`, révision au tag `v0.1.4` (décisions DEC-11 et DEC-12).
 
 ---
 
@@ -70,7 +70,7 @@ la colonne Title est ajoutée lors de l'import, conformément au guide de constr
 
 # 4. Décisions techniques
 
-`docs/decisions/technical-decisions-v0.1.2.md`
+`docs/decisions/technical-decisions-v0.1.2.md` et `docs/decisions/technical-decisions-v0.1.3.md`
 
 | ID | Sujet | Statut | Impact SharePoint |
 |------|------|------|------|
@@ -84,6 +84,8 @@ la colonne Title est ajoutée lors de l'import, conformément au guide de constr
 | DEC-08 | Concurrence : BROUILLON / EN_COURS, même type | Validée | Aucun (comportement applicatif) |
 | DEC-09 | Reprise : utilisateur courant | Validée | Aucun (comportement applicatif) |
 | DEC-10 | Questions PHOTO : PHOTO_CAPTURED | Validée | Appliquée (usage de Valeur) |
+| DEC-11 | InspectionGUID immédiat ; InspectionID temporaire puis définitif à la synchronisation | Validée (v0.1.4) | Règle de remplissage documentée |
+| DEC-12 | Archivage : référence DateDerniereModification, plus de 6 mois | Validée (v0.1.4) | Règle de remplissage documentée |
 
 Documents alignés sur ces décisions : schéma SharePoint, guide de construction,
 `powerapps/screens.md`, README des fichiers modèles, backlog (Sprint 0 clôturé).
@@ -92,14 +94,22 @@ Documents alignés sur ces décisions : schéma SharePoint, guide de constructio
 
 # 5. Points encore ouverts
 
-| ID | Point | Bloque le sprint SharePoint ? | Bloque |
-|------|------|------|------|
-| DEC-11 | Mécanisme de génération du compteur NNNNNN de l'InspectionID | Non | PA-07, PAU-04 |
-| DEC-12 | Date de référence et statuts concernés par l'archivage à 6 mois | Non | PAU-03 |
-| DEC-07 (suite) | Emplacement de stockage des paramètres de compression | Non | PA-17 |
-| — | DateSoumission non définie pour une inspection INACCESSIBLE | Non | — |
-| — | SYS_001 a VisibleParDefaut = OUI alors que l'architecture la dit « jamais affichée » (sans effet : formulaire SYSTEM) | Non | — |
-| — | `modele-donnees-v0.1.md`, `wireframes-v0.1.md` à l'état « À compléter » ; README racine en version 0.1 | Non | — |
+Liste détaillée : `docs/build/open-questions.md`.
+
+| ID | Point | Priorité | Bloque le démarrage SharePoint ? | Bloque le démarrage Power Apps ? | Bloque |
+|------|------|------|------|------|------|
+| OQ-02 | Mécanisme d'attribution de la valeur finale de l'InspectionID | P1 | Non | Non | PAU-04 (Power Automate) |
+| OQ-01 | Format de l'InspectionID temporaire | P2 | Non | Non | Finalisation de PA-07 |
+| OQ-03 | Nom du dossier photos tant que l'InspectionID est temporaire | P2 | Non | Non | PA-16, PAU-05 |
+| OQ-04 | Statuts concernés par l'archivage | P2 | Non | Non | PAU-03 |
+| OQ-05 | Calcul du délai de 6 mois, effet de l'archivage sur DateDerniereModification | P2 | Non | Non | PAU-03 |
+| OQ-06 | Stockage des paramètres de compression | P2 | Non | Non | PA-17 |
+| OQ-07 | DateSoumission d'une inspection INACCESSIBLE | P3 | Non | Non | — |
+| OQ-08 | VisibleParDefaut de SYS_001 (fichiers gelés) | P3 | Non | Non | — |
+| OQ-09, OQ-10 | Structuration des conditions R130 + R131 et R150 / R151 | P3 | Non | Non | v0.2 |
+| OQ-11 | Documents à compléter | P3 | Non | Non | — |
+
+Les points DEC-11 et DEC-12 de la version initiale de ce rapport sont décidés (v0.1.4).
 
 ---
 
@@ -113,7 +123,7 @@ Documents alignés sur ces décisions : schéma SharePoint, guide de constructio
 | RR4 | Oubli de la conversion OUI/NON → Oui/Non ou de la colonne Title lors de l'import | Guide § 7, § 8 ; contrôles § 9 |
 | RR5 | Index créés après dépassement de 5 000 éléments | Création des index avant tout import (guide § 0, § 5) |
 | RR6 | REPONSES.Valeur multiligne : non indexable, filtre non délégable | Valeur n'est jamais un critère de recherche (DEC-05) |
-| RR7 | Doublon d'InspectionID tant que DEC-11 n'est pas décidée | Sans effet sur l'intégrité (relations par InspectionGUID) ; nom de dossier photos potentiellement partagé |
+| RR7 | InspectionID temporaire affiché tant que l'inspection n'est pas synchronisée ; doublon possible tant que OQ-02 n'est pas tranchée | Sans effet sur l'intégrité (relations par InspectionGUID, DEC-11) ; nom de dossier photos traité en OQ-03 |
 | RR8 | Colonne « Auteur » de PHOTOS_INSPECTIONS proche du libellé de la colonne native « Créé par » sur un site en français | Vérification du nom interne (guide § 3.5) |
 
 ---
@@ -123,9 +133,16 @@ Documents alignés sur ces décisions : schéma SharePoint, guide de constructio
 | Périmètre | Verdict |
 |------|------|
 | **Sprint SharePoint** | **READY** |
-| Sprint Power Apps | NOT READY — DEC-11 à trancher avant PA-07 |
-| Sprint Power Automate | NOT READY pour PAU-03 (DEC-12) ; READY pour PAU-01 |
+| **Sprint Power Apps** | **READY** (révision v0.1.4) |
+| Sprint Power Automate | READY pour PAU-01, PAU-02 ; NOT READY pour PAU-04 (OQ-02, P1) et PAU-03 (OQ-04, OQ-05) |
 
 Le Sprint SharePoint peut démarrer : le schéma, les catalogues, les décisions techniques
 et le guide de construction sont complets et cohérents. Aucun point ouvert ne bloque
 la création des listes, de la bibliothèque, des index ni l'import des catalogues.
+
+Le Sprint Power Apps peut démarrer après exécution de `docs/build/sharepoint-build-checklist.md`
+et de `docs/build/powerapps-readiness.md`. Le seul blocage P1 de la version initiale (DEC-11) est levé :
+PA-07 peut créer une inspection avec un InspectionGUID immédiat et un InspectionID temporaire.
+Le seul point P1 restant (OQ-02, attribution de la valeur finale de l'InspectionID) concerne
+la synchronisation (PAU-04) et ne bloque aucun élément du Sprint Power Apps.
+Les points P2 OQ-01, OQ-03 et OQ-06 doivent être tranchés avant la finalisation de PA-07, PA-16 et PA-17.

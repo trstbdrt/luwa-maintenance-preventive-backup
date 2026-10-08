@@ -1,7 +1,7 @@
 # LUWA Maintenance Preventive Backup
-## Écrans Power Apps — App 1 v0.1.3
+## Écrans Power Apps — App 1 v0.1.4
 
-Version : 0.1.3
+Version : 0.1.4
 
 Date : 2026-10-08
 
@@ -13,6 +13,7 @@ Références :
 - `sharepoint/questions/questions.csv`
 - `sharepoint/regles/regles_formulaire.csv`
 - `docs/decisions/technical-decisions-v0.1.2.md`
+- `docs/decisions/technical-decisions-v0.1.3.md`
 
 Ce document décrit les écrans sans Power Fx. Les comportements sont exprimés en langage naturel.
 
@@ -198,7 +199,8 @@ puis démarrer l'inspection ou déclarer l'ouvrage inaccessible.
 Création d'une ligne INSPECTIONS :
 
 - InspectionGUID : nouveau GUID ;
-- InspectionID : identifiant lisible `INS-AAAAMMJJ-NNNNNN` ; Title = InspectionID ;
+- InspectionGUID : généré immédiatement (DEC-11) ;
+- InspectionID : éventuellement temporaire pendant la saisie, valeur finale `INS-AAAAMMJJ-NNNNNN` attribuée lors de la synchronisation SharePoint (DEC-11) ; Title = InspectionID ;
 - TypeInspection, NomOuvrage, Inspecteur = utilisateur connecté ;
 - DateCreation et DateDerniereModification = maintenant ;
 - StatutInspection = BROUILLON ;
@@ -317,7 +319,7 @@ Une question masquée n'est ni obligatoire, ni contrôlée à la soumission.
 - Écrit / met à jour les lignes REPONSES de l'inspection (clé InspectionGUID + QuestionCode ; à la création, ReponseID = Title = nouveau GUID).
 - Envoie les photos en attente dans PHOTOS_INSPECTIONS (dossier `AAAA/MM/InspectionID/`,
   métadonnées InspectionGUID, QuestionCode, NomOuvrage, Auteur, DatePhoto, CompressionVersion).
-- Met à jour DateDerniereModification.
+- Met à jour DateDerniereModification (date de référence de l'archivage, DEC-12).
 - Passe le statut de BROUILLON à EN_COURS dès qu'au moins une réponse existe.
 - Compression des photos : configurable, non systématique ; paramètres listés en DEC-07, stockage à définir.
 

@@ -1,13 +1,13 @@
 # LUWA Maintenance Preventive Backup
-## SharePoint Schema v0.1.3
+## SharePoint Schema v0.1.4
 
-Version : 0.1.3
+Version : 0.1.4
 
 Date : 2026-10-08
 
 Statut : Validé — référence technique complète
 
-Décisions appliquées : `docs/decisions/technical-decisions-v0.1.2.md` (DEC-01 à DEC-10)
+Décisions appliquées : `docs/decisions/technical-decisions-v0.1.2.md` (DEC-01 à DEC-10) et `docs/decisions/technical-decisions-v0.1.3.md` (DEC-11, DEC-12)
 
 ---
 
@@ -54,7 +54,11 @@ InspectionGUID est la clé principale et la clé relationnelle unique (DEC-03).
 
 Toutes les relations (REPONSES, PHOTOS_INSPECTIONS, InspectionPrecedenteGUID) utilisent InspectionGUID.
 
-InspectionID est un identifiant lisible, utilisé uniquement pour l'affichage.
+InspectionID est un identifiant métier lisible, utilisé uniquement pour l'affichage. Il peut être temporaire pendant la saisie et reçoit sa valeur finale `INS-AAAAMMJJ-NNNNNN` lors de la synchronisation SharePoint ; aucune relation ne dépend de InspectionID (DEC-11).
+
+InspectionGUID est généré immédiatement à la création de l'inspection (DEC-11).
+
+DateDerniereModification est mise à jour à chaque enregistrement ; elle est la date de référence de l'archivage : une inspection est archivable uniquement si Aujourd'hui - DateDerniereModification > 6 mois (DEC-12).
 
 Le commentaire d'inaccessibilité est stocké dans REPONSES sur la question SYS_001.
 
