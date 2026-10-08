@@ -1,7 +1,7 @@
 # LUWA Maintenance Preventive Backup
 ## Questions ouvertes
 
-Version : 0.1.7
+Version : 0.2.0
 
 Date : 2026-10-08
 
@@ -41,6 +41,7 @@ Détail : `docs/decisions/technical-decisions-v0.1.5.md`.
 | OQ-09 | Lien formel des conditions composées (R130 + R131) | P3 | v0.2 | Non | Non | Non |
 | OQ-10 | Condition structurée « vide ≠ 0 » pour R150 / R151 | P3 | v0.2 | Non | Non | Non |
 | OQ-11 | Documents encore à compléter | P3 | — | Non | Non | Non |
+| OQ-12 | Sort des réponses d'une question devenue masquée | P2 | Contenu de REPONSES et des exports | Non | Non | Non |
 
 Aucune question ouverte de priorité P1.
 
@@ -104,3 +105,16 @@ est portée par la colonne Commentaire, pas par une condition structurée.
 | `docs/architecture/modele-donnees-v0.1.md` | « À compléter » |
 | `docs/wireframes/wireframes-v0.1.md` | « À compléter » |
 | `README.md` (racine) | Indique encore la version 0.1 |
+
+---
+
+# OQ-12 — Réponses d'une question devenue masquée
+
+**Contexte** : une réponse peut être saisie sur une question affichée par une règle, puis la question
+être masquée par un changement de réponse (ex. POT_004 passe d'AVANCEE à BON : POT_004_1 et POT_004_2_A/B/C
+sont masquées). Le moteur de règles ignore les questions masquées (technical design § 5.3, § 5.4),
+mais les documents de référence ne précisent pas si leur réponse est conservée ou effacée dans REPONSES.
+
+**À décider** : conservation ou effacement de la réponse d'une question devenue masquée.
+
+**Impact** : contenu de REPONSES, exports, App 2. Ne bloque pas le développement : le moteur fonctionne dans les deux cas.

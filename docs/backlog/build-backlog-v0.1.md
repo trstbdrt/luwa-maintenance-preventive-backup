@@ -85,7 +85,7 @@ en DEC-11 et DEC-12 et dans `docs/reviews/build-readiness-v0.1.3.md`.
 | PA-13 | Calcul POT_004_2_C depuis FormuleCalcul, avec blocage R150 | P1 | PA-12 |
 | PA-14 | Panneau commentaire (icône 💬) | P1 | PA-10 |
 | PA-15 | Panneau photos (icône 📷) : appareil / galerie, compteur n/min, maximum NbPhotosMax | P1 | PA-10, DEC-06 |
-| PA-16 | Enregistrement (REPONSES, PHOTOS_INSPECTIONS dans `{InspectionGUID}/`, statut BROUILLON → EN_COURS, DateDerniereModification) | P1 | PA-11, PA-15, DEC-10, DEC-15, DEC-17 |
+| PA-16 | Enregistrement (REPONSES, PHOTOS_INSPECTIONS dans `{InspectionGUID}/`, statut BROUILLON → EN_COURS, DateDerniereModification) | P1 | PA-11, PA-15, DEC-10, DEC-15, DEC-17, PAU-06 |
 | PA-17 | Compression photo configurable et non systématique | P2 | PA-15, DEC-07 |
 | PA-18 | Screen_Resume : contrôles R500 à R503, commentaires obligatoires, blocage R151 | P1 | PA-12, PA-16 |
 | PA-19 | Soumission (TERMINE, DateSoumission) | P1 | PA-18 |
@@ -103,6 +103,7 @@ en DEC-11 et DEC-12 et dans `docs/reviews/build-readiness-v0.1.3.md`.
 | PAU-03 | Archivage : statut ARCHIVE pour TERMINE / INACCESSIBLE si Aujourd'hui - DateDerniereModification > 183 jours, sans modifier DateDerniereModification, sans suppression | P2 | SP-08, DEC-16, DEC-17 |
 | PAU-04 | Attribution de l'InspectionID final `INS-{DateCreation AAAAMMJJ}-{ID SharePoint sur 6 chiffres}` et de Title | P1 | SP-08, DEC-14 |
 | PAU-05 | Création des dossiers photos `{InspectionGUID}/` (si non fait par Power Apps) | P2 | SP-10, DEC-15 |
+| PAU-06 | Flux d'envoi des photos appelé depuis Power Apps : création du dossier `{InspectionGUID}` si absent, du fichier et de ses métadonnées (technical design § 6.6) | P1 | SP-10, DEC-15 |
 
 ---
 

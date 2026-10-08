@@ -1,7 +1,7 @@
 # LUWA Maintenance Preventive Backup
-## Écrans Power Apps — App 1 v0.1.6
+## Écrans Power Apps — App 1 v0.2.0
 
-Version : 0.1.6
+Version : 0.2.0
 
 Date : 2026-10-08
 
@@ -17,6 +17,9 @@ Références :
 - `docs/decisions/technical-decisions-v0.1.5.md`
 
 Ce document décrit les écrans sans Power Fx. Les comportements sont exprimés en langage naturel.
+
+Conception technique détaillée (variables, collections, moteur de règles, photos, statuts, flux) :
+`powerapps/powerapps-technical-design-v0.2.md`.
 
 ---
 
@@ -51,6 +54,8 @@ les photos exigées et les affichages conditionnels sont entièrement dérivés 
 | `gblUtilisateur` | Utilisateur connecté (e-mail, nom) |
 | `gblTypeInspection` | POTEAU ou LUMINAIRE, choisi sur Screen_Type |
 | `gblNomOuvrage` | Ouvrage encodé sur Screen_Identification |
+| `gblInspectionGUID` | InspectionGUID de l'inspection en cours (clé de toutes les écritures) |
+| `gblInspectionID` | InspectionID affiché (`TMP-…` puis `INS-…`) |
 | `gblInspection` | Inspection en cours d'édition (ligne INSPECTIONS, dont InspectionGUID) |
 | `gblInspectionConsultee` | Inspection ouverte en lecture seule sur Screen_History |
 | `gblEcranRetourHistorique` | Écran vers lequel revenir en quittant Screen_History |
@@ -453,7 +458,7 @@ Pour une inspection INACCESSIBLE : affichage du commentaire et des photos SYS_00
 
 | Collection | Usage |
 |------|------|
-| `colHistoriqueResultats` | Inspections trouvées |
+| `colHistorique` | Inspections trouvées |
 | `colReponsesConsultees` | Réponses de l'inspection affichée |
 | `colPhotosConsultees` | Photos de l'inspection affichée |
 

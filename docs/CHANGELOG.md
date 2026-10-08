@@ -1,5 +1,17 @@
 # Changelog
 
+## Version 0.2.0
+
+Date : 2026-10-09
+
+Contenu :
+
+- Power Apps Technical Design (powerapps/powerapps-technical-design-v0.2.md) : variables globales et d'écran, collections, navigation, moteur de règles, photos, brouillons et statuts, 7 flux utilisateur
+- Power Apps Readiness : verdict final POWER APPS IMPLEMENTATION READY (avec réserves d'exécution)
+- Écrans alignés (gblInspectionGUID, gblInspectionID, colHistorique)
+- Backlog : ajout PAU-06 (flux d'envoi des photos)
+- Question ouverte OQ-12 (réponses d'une question devenue masquée)
+
 ## Version 0.1.7
 
 Date : 2026-10-08

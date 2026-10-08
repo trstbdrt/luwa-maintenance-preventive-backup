@@ -1,7 +1,7 @@
 # LUWA Maintenance Preventive Backup
 ## Power Apps Readiness
 
-Version : 0.1.4
+Version : 0.2.0
 
 Date : 2026-10-08
 
@@ -106,6 +106,7 @@ Utiliser les fichiers `sharepoint/data-model/*.csv` sur un **site de test**, jam
 
 Le concepteur Power Apps a pris connaissance de :
 
+- [ ] `powerapps/powerapps-technical-design-v0.2.md` (variables, collections, moteur de règles, photos, statuts, flux)
 - [ ] `powerapps/screens.md` (6 écrans, principes communs)
 - [ ] `sharepoint/data-model/sharepoint-schema.md` (règles de remplissage, utilisation des colonnes de valeur selon TypeQuestion)
 - [ ] DEC-01 à DEC-10 (`technical-decisions-v0.1.2.md`)
@@ -134,3 +135,30 @@ Le concepteur Power Apps a pris connaissance de :
 - [ ] **Ouverture de Power Apps autorisée** (toutes les sections conformes)
 
 Validé par : ____________________  Date : ____________
+
+---
+
+# 7. Verdict final (v0.2.0)
+
+État au 2026-10-09 :
+
+| Domaine | État | Bloque l'implémentation ? |
+|------|------|------|
+| Conception technique | Complète : `powerapps/powerapps-technical-design-v0.2.md` | — |
+| Décisions | DEC-01 à DEC-17 prises ; aucune question ouverte P1 | Non |
+| SharePoint | Construit et vérifié (`docs/build/sharepoint-build-report.md`) : listes, bibliothèque, 55 colonnes, 22 index, 34 questions, 29 règles | Non |
+| Envoi des fichiers photo | Dépend du flux PAU-06 (technical design § 6.6) | Non : bloque seulement l'envoi effectif des photos (PA-16), pas le développement des écrans |
+| Permissions des techniciens (§ 2.4) | Non configurées ; soumises à l'accord explicite du propriétaire du site | Non : nécessaires avant les tests avec des comptes techniciens (TST-17) |
+| Tests d'écriture (§ 3.2) | Non exécutés ; site de test requis | Non : nécessaires avant les tests d'intégration |
+| Environnement Power Platform (§ 4) | Non vérifié par l'équipe projet | À contrôler par le développeur à l'ouverture de Studio (licence, DLP) |
+| Questions ouvertes | OQ-06 (P2, compression), OQ-12 (P2, réponses masquées), OQ-07 à OQ-11 (P3) | Non |
+
+Aucun blocage de conception ne subsiste. Les éléments non réalisés sont des étapes d'exécution
+qui n'empêchent pas de démarrer le développement dans Power Apps Studio.
+
+## Verdict
+
+**POWER APPS IMPLEMENTATION READY**
+
+Réserves d'exécution à lever avant les tests utilisateurs : permissions (§ 2.4, avec accord du propriétaire),
+tests d'écriture (§ 3.2), flux d'envoi des photos (PAU-06).
