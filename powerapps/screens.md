@@ -1,7 +1,7 @@
 # LUWA Maintenance Preventive Backup
-## Écrans Power Apps — App 1 v0.1.2
+## Écrans Power Apps — App 1 v0.1.3
 
-Version : 0.1.2
+Version : 0.1.3
 
 Date : 2026-10-08
 
@@ -12,6 +12,7 @@ Références :
 - `sharepoint/data-model/sharepoint-schema.md`
 - `sharepoint/questions/questions.csv`
 - `sharepoint/regles/regles_formulaire.csv`
+- `docs/decisions/technical-decisions-v0.1.2.md`
 
 Ce document décrit les écrans sans Power Fx. Les comportements sont exprimés en langage naturel.
 
@@ -99,7 +100,7 @@ Point d'entrée de l'application : démarrer, reprendre ou consulter une inspect
 | En-tête | Nom de l'application, utilisateur connecté |
 | Bouton « Nouvelle inspection » | Démarre le parcours de création |
 | Bouton « Reprendre inspection » | Affiche la liste des inspections reprenables |
-| Galerie « Inspections à reprendre » | Inspections BROUILLON ou EN_COURS : InspectionID, ouvrage, type, statut, date de dernière modification |
+| Galerie « Inspections à reprendre » | Inspections BROUILLON ou EN_COURS **de l'utilisateur courant** (DEC-09) : InspectionID, ouvrage, type, statut, date de dernière modification |
 | Bouton « Historique » | Ouvre la consultation des inspections |
 
 ## Variables
@@ -119,7 +120,7 @@ Point d'entrée de l'application : démarrer, reprendre ou consulter une inspect
 
 | Source | Accès |
 |------|------|
-| INSPECTIONS | Lecture (filtre sur StatutInspection, colonne indexée) |
+| INSPECTIONS | Lecture (filtre sur StatutInspection, colonne indexée, et Inspecteur = utilisateur courant) |
 | QUESTIONS | Lecture |
 | REGLES_FORMULAIRE | Lecture |
 
@@ -130,10 +131,6 @@ Point d'entrée de l'application : démarrer, reprendre ou consulter une inspect
 | Nouvelle inspection | Screen_Type |
 | Sélection d'une inspection à reprendre | Screen_Inspection (`gblInspection` = inspection sélectionnée, réponses et photos rechargées) |
 | Historique | Screen_History (`gblEcranRetourHistorique` = Screen_Home) |
-
-## Point ouvert
-
-Le périmètre de la liste de reprise (inspections de l'utilisateur seulement ou de tous) n'est pas spécifié.
 
 ---
 
@@ -189,7 +186,7 @@ puis démarrer l'inspection ou déclarer l'ouvrage inaccessible.
 | Champ « Nom ouvrage » | Saisie manuelle (ex. `E100 511`, `E100 511-1`, `K024 318-2`), sans validation patrimoine |
 | Bouton « Rechercher » | Lance la recherche de l'historique de l'ouvrage |
 | Bandeau « Dernière inspection » | Statut de la dernière inspection connue : Terminée, En cours, Inaccessible |
-| Avertissement de concurrence | « Une inspection est actuellement en cours sur cet ouvrage. » — informatif, ne bloque jamais |
+| Avertissement de concurrence | « Une inspection est actuellement en cours sur cet ouvrage. » — affiché s'il existe une inspection BROUILLON ou EN_COURS du même ouvrage et du même type (DEC-08) ; informatif, ne bloque jamais |
 | Galerie « Inspections précédentes » | Inspections de l'ouvrage ; un clic ouvre Screen_History en lecture seule |
 | Bouton « Commencer l'inspection » | Crée l'inspection ; libellé « Accessible maintenant » si la dernière inspection est INACCESSIBLE |
 | Bouton « Inspection inaccessible » | Ouvre le panneau d'inaccessibilité |
@@ -205,10 +202,10 @@ Création d'une ligne INSPECTIONS :
 - TypeInspection, NomOuvrage, Inspecteur = utilisateur connecté ;
 - DateCreation et DateDerniereModification = maintenant ;
 - StatutInspection = BROUILLON ;
-- StatutTraitement : valeur initiale à confirmer (voir rapport de cohérence) ;
+- StatutTraitement = NON_ANALYSE (DEC-02) ;
 - GPSLatitude / GPSLongitude : si disponibles ;
-- InspectionPrecedenteGUID : en cas d'« Accessible maintenant », GUID de l'inspection INACCESSIBLE
-  (interprétation à confirmer, voir rapport de cohérence).
+- InspectionPrecedenteGUID : en cas d'« Accessible maintenant », InspectionGUID de la dernière inspection
+  INACCESSIBLE de l'ouvrage (DEC-04) ; vide sinon.
 
 L'inspection précédente n'est jamais modifiée.
 
@@ -269,7 +266,7 @@ avec affichage dynamique piloté par REGLES_FORMULAIRE.
 | Composant | Description |
 |------|------|
 | En-tête | InspectionID, ouvrage, type, statut |
-| Avertissement de concurrence | Rappel informatif si une autre inspection est en cours sur l'ouvrage |
+| Avertissement de concurrence | Rappel informatif si une autre inspection BROUILLON ou EN_COURS du même type existe sur l'ouvrage (DEC-08) |
 | Galerie des questions | Questions du formulaire (`Formulaire` = type), triées par `OrdreAffichage`, regroupées par `DisplayGroup` (GENERAL, CORROSION, SUR_PONT) |
 | Sous-questions | Questions ayant un `QuestionParent`, affichées sous leur parent |
 | Contrôle de réponse | Selon `TypeQuestion` (voir tableau ci-dessous) |
@@ -290,7 +287,7 @@ avec affichage dynamique piloté par REGLES_FORMULAIRE.
 | CHECKBOX | Case à cocher ; valeur cochée = valeur de `ValeursPossibles` (ex. FAIT) |
 | NUMERIQUE | Saisie numérique |
 | CALCUL | Lecture seule ; calculé à partir de `FormuleCalcul` ; non calculé si la règle BLOQUER_CALCUL est active (R150) |
-| PHOTO | Aucun champ de réponse ; seulement le panneau photos |
+| PHOTO | Aucun champ de saisie ; seulement le panneau photos. À l'enregistrement, une ligne REPONSES avec Valeur = PHOTO_CAPTURED est créée dès qu'au moins une photo existe (DEC-10) |
 | TEXTE | Texte libre |
 | SYSTEM | Jamais affiché dans ce formulaire (SYS_001 appartient au formulaire SYSTEM) |
 
@@ -306,7 +303,7 @@ avec affichage dynamique piloté par REGLES_FORMULAIRE.
 | MASQUER_FORMULAIRE | Masque les questions restantes du formulaire (R002) |
 | RENDRE_OBLIGATOIRE | Rend la cible obligatoire |
 | COMMENT_OBLIGATOIRE | Rend le commentaire de la cible obligatoire |
-| PHOTO_MIN | Fixe le minimum de photos de la cible à `Parametre` |
+| PHOTO_MIN | Remplace le NbPhotosMin du catalogue par `Parametre` pour la cible tant que la règle est vérifiée (DEC-06) |
 | BLOQUER_CALCUL | Empêche le calcul de la cible |
 | BLOQUER_SOUMISSION | Empêche la soumission (contrôlé sur Screen_Resume) |
 
@@ -317,12 +314,12 @@ Une question masquée n'est ni obligatoire, ni contrôlée à la soumission.
 
 ## Comportement « Enregistrer »
 
-- Écrit / met à jour les lignes REPONSES de l'inspection (clé InspectionGUID + QuestionCode).
+- Écrit / met à jour les lignes REPONSES de l'inspection (clé InspectionGUID + QuestionCode ; à la création, ReponseID = Title = nouveau GUID).
 - Envoie les photos en attente dans PHOTOS_INSPECTIONS (dossier `AAAA/MM/InspectionID/`,
   métadonnées InspectionGUID, QuestionCode, NomOuvrage, Auteur, DatePhoto, CompressionVersion).
 - Met à jour DateDerniereModification.
 - Passe le statut de BROUILLON à EN_COURS dès qu'au moins une réponse existe.
-- Compression des photos : configurable, non systématique ; paramètres non figés (voir rapport de cohérence).
+- Compression des photos : configurable, non systématique ; paramètres listés en DEC-07, stockage à définir.
 
 ## Variables
 

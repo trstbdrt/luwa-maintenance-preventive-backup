@@ -1,13 +1,13 @@
 # LUWA Maintenance Preventive Backup
-## Guide de construction SharePoint v0.1.2
+## Guide de construction SharePoint v0.1.3
 
-Version : 0.1.2
+Version : 0.1.3
 
 Date : 2026-10-08
 
 Public : administrateur SharePoint
 
-Référence : `sharepoint/data-model/sharepoint-schema.md` (v0.1.1)
+Référence : `sharepoint/data-model/sharepoint-schema.md` (v0.1.3) et `docs/decisions/technical-decisions-v0.1.2.md`
 
 ---
 
@@ -67,16 +67,12 @@ Chaque liste SharePoint possède une colonne native `Title`.
 
 | Liste | Utilisation de Title |
 |------|------|
-| INSPECTIONS | **Title = InspectionID** (règle du schéma), obligatoire, indexée |
-| QUESTIONS | Non définie par le schéma — voir rapport de cohérence |
-| REGLES_FORMULAIRE | Non définie par le schéma — voir rapport de cohérence |
-| REPONSES | Non définie par le schéma — voir rapport de cohérence |
+| INSPECTIONS | **Title = InspectionID**, obligatoire, indexée |
+| QUESTIONS | **Title = QuestionCode**, obligatoire |
+| REGLES_FORMULAIRE | **Title = RuleID**, obligatoire |
+| REPONSES | **Title = ReponseID**, obligatoire |
 
-Pour QUESTIONS, REGLES_FORMULAIRE et REPONSES, deux options techniques sont possibles,
-**à valider avant construction** :
-
-- rendre `Title` non obligatoire (Paramètres de la liste > Title > Obligatoire : Non) ;
-- ou y recopier la clé de la ligne (QuestionCode, RuleID, ReponseID).
+Décision DEC-01. La colonne Title reste obligatoire dans les quatre listes.
 
 ---
 
@@ -135,7 +131,7 @@ Légende : **Obl.** = « Exiger que cette colonne contienne des informations ».
 | DateDerniereModification | DateTime | Oui | Non | Date et heure |
 | DateSoumission | DateTime | Non | Non | Date et heure |
 | StatutInspection | Choice | Oui | Oui | Valeurs : BROUILLON, EN_COURS, TERMINE, INACCESSIBLE, ARCHIVE |
-| StatutTraitement | Choice | Oui | Oui | Valeurs : NON_ANALYSE, ANALYSE_EN_COURS, VALIDE, ACTION_REQUISE, CLOTURE |
+| StatutTraitement | Choice | Oui | Oui | Valeurs : NON_ANALYSE, ANALYSE_EN_COURS, VALIDE, ACTION_REQUISE, CLOTURE ; **valeur par défaut : NON_ANALYSE** (DEC-02) |
 | GPSLatitude | Number | Non | Non | Décimales : 6 |
 | GPSLongitude | Number | Non | Non | Décimales : 6 |
 | InspectionPrecedenteGUID | Single line text | Non | Non | |
@@ -144,6 +140,7 @@ Légende : **Obl.** = « Exiger que cette colonne contienne des informations ».
 
 | Nom (interne) | Type SharePoint | Obl. | Index | Paramètres |
 |------|------|------|------|------|
+| Title | Single line text (native) | Oui | Non | Contient QuestionCode |
 | QuestionCode | Single line text | Oui | Oui | |
 | QuestionParent | Single line text | Non | Oui | |
 | DisplayGroup | Choice | Oui | Non | Valeurs : GENERAL, CORROSION, SUR_PONT, SYSTEM |
@@ -168,6 +165,7 @@ la colonne a toujours une valeur (Oui ou Non).
 
 | Nom (interne) | Type SharePoint | Obl. | Index | Paramètres |
 |------|------|------|------|------|
+| Title | Single line text (native) | Oui | Non | Contient RuleID |
 | RuleID | Single line text | Oui | Oui | |
 | Priorite | Number | Oui | Oui | Décimales : 0 |
 | Formulaire | Choice | Oui | Oui | Valeurs : POTEAU, LUMINAIRE, SYSTEM, ALL |
@@ -184,10 +182,11 @@ la colonne a toujours une valeur (Oui ou Non).
 
 | Nom (interne) | Type SharePoint | Obl. | Index | Paramètres |
 |------|------|------|------|------|
-| ReponseID | Single line text | Oui | Oui | |
+| Title | Single line text (native) | Oui | Non | Contient ReponseID |
+| ReponseID | Single line text | Oui | Oui | GUID (DEC-03) |
 | InspectionGUID | Single line text | Oui | Oui | |
 | QuestionCode | Single line text | Oui | Oui | |
-| Valeur | Single line text | Non | Non | 255 caractères maximum |
+| Valeur | Multiple line text | Non | Non | Texte brut (DEC-05) ; PHOTO_CAPTURED pour les questions PHOTO (DEC-10) |
 | ValeurNumerique | Number | Non | Non | Décimales : automatique |
 | Commentaire | Multiple line text | Non | Non | Texte brut |
 | DateEncodage | DateTime | Oui | Oui | Date et heure |
@@ -288,7 +287,7 @@ Fichier source : `sharepoint/questions/questions.csv` (34 lignes, 16 colonnes, U
    La valeur exacte à coller dépend de la langue du site (par exemple `Oui`/`Non` ou `Yes`/`No`) :
    tester d'abord sur une ligne.
 6. Conserver tel quel le contenu de `ValeursPossibles` (séparateur `|`) et de `FormuleCalcul`.
-7. Si l'option « Title = clé » est retenue (section 1), ajouter une colonne `Title` égale à `QuestionCode`.
+7. Ajouter une colonne `Title` égale à `QuestionCode` (DEC-01).
 
 ## 7.2 Import
 
@@ -315,7 +314,7 @@ Prérequis : QUESTIONS importée et contrôlée.
    - `QuestionSource` = `FORMULAIRE` (règles R500 à R600) ;
    - `QuestionCible` = `*` (règles R002, R151, R500 à R600) ;
    - `ConditionValeur` numériques (`30`, `0`) en texte.
-4. Si l'option « Title = clé » est retenue (section 1), ajouter une colonne `Title` égale à `RuleID`.
+4. Ajouter une colonne `Title` égale à `RuleID` (DEC-01).
 5. Importer en mode grille, comme en 7.2.
 
 ---

@@ -1,11 +1,13 @@
 # LUWA Maintenance Preventive Backup
-## SharePoint Schema v0.1
+## SharePoint Schema v0.1.3
 
-Version : 0.1
+Version : 0.1.3
 
 Date : 2026-10-08
 
-Statut : Validé
+Statut : Validé — référence technique complète
+
+Décisions appliquées : `docs/decisions/technical-decisions-v0.1.2.md` (DEC-01 à DEC-10)
 
 ---
 
@@ -46,15 +48,19 @@ Une ligne = une inspection.
 
 ## Règles de remplissage
 
-Title = InspectionID
+Title = InspectionID (DEC-01)
 
-InspectionGUID est la clé relationnelle unique.
+InspectionGUID est la clé principale et la clé relationnelle unique (DEC-03).
 
 Toutes les relations (REPONSES, PHOTOS_INSPECTIONS, InspectionPrecedenteGUID) utilisent InspectionGUID.
 
 InspectionID est un identifiant lisible, utilisé uniquement pour l'affichage.
 
 Le commentaire d'inaccessibilité est stocké dans REPONSES sur la question SYS_001.
+
+StatutTraitement = NON_ANALYSE à la création de l'inspection (DEC-02). Valeur par défaut de la colonne : NON_ANALYSE.
+
+InspectionPrecedenteGUID = InspectionGUID de la dernière inspection INACCESSIBLE de l'ouvrage, renseigné uniquement lorsque l'utilisateur sélectionne « Accessible maintenant » (DEC-04). Vide dans tous les autres cas.
 
 ## Valeurs StatutInspection
 
@@ -84,6 +90,7 @@ Une ligne = une question.
 
 | Nom | Type SharePoint | Obligatoire | Index |
 |------|------|------|------|
+| Title | Single line text | Oui | Non |
 | QuestionCode | Single line text | Oui | Oui |
 | QuestionParent | Single line text | Non | Oui |
 | DisplayGroup | Choice | Oui | Non |
@@ -100,6 +107,10 @@ Une ligne = une question.
 | VisibleParDefaut | Yes/No | Oui | Non |
 | ValeursPossibles | Multiple line text | Non | Non |
 | FormuleCalcul | Multiple line text | Non | Non |
+
+## Règles de remplissage
+
+Title = QuestionCode (DEC-01)
 
 ## Valeurs DisplayGroup
 
@@ -134,6 +145,7 @@ Catalogue moteur de règles.
 
 | Nom | Type SharePoint | Obligatoire | Index |
 |------|------|------|------|
+| Title | Single line text | Oui | Non |
 | RuleID | Single line text | Oui | Oui |
 | Priorite | Number | Oui | Oui |
 | Formulaire | Choice | Oui | Oui |
@@ -145,6 +157,12 @@ Catalogue moteur de règles.
 | Parametre | Single line text | Non | Non |
 | Actif | Yes/No | Oui | Non |
 | Commentaire | Multiple line text | Non | Non |
+
+## Règles de remplissage
+
+Title = RuleID (DEC-01)
+
+Une action PHOTO_MIN dont la règle est active (Actif = Oui) et dont la condition est vérifiée remplace la valeur NbPhotosMin du catalogue QUESTIONS pour la question cible (DEC-06).
 
 ## Valeurs Formulaire
 
@@ -202,14 +220,35 @@ Les index sont obligatoires.
 
 | Nom | Type SharePoint | Obligatoire | Index |
 |------|------|------|------|
+| Title | Single line text | Oui | Non |
 | ReponseID | Single line text | Oui | Oui |
 | InspectionGUID | Single line text | Oui | Oui |
 | QuestionCode | Single line text | Oui | Oui |
-| Valeur | Single line text | Non | Non |
+| Valeur | Multiple line text | Non | Non |
 | ValeurNumerique | Number | Non | Non |
 | Commentaire | Multiple line text | Non | Non |
 | DateEncodage | DateTime | Oui | Oui |
 | UtilisateurEncodage | Person | Oui | Non |
+
+## Règles de remplissage
+
+Title = ReponseID (DEC-01)
+
+ReponseID = GUID (DEC-03)
+
+Valeur est une colonne Multiple line text en texte brut, pour supporter les textes longs (DEC-05). Elle n'est ni indexée ni utilisée comme critère de filtre.
+
+Utilisation des colonnes de valeur selon TypeQuestion :
+
+| TypeQuestion | Valeur | ValeurNumerique |
+|------|------|------|
+| RADIO, CHECKBOX | Valeur prise dans ValeursPossibles | Vide |
+| TEXTE | Texte saisi | Vide |
+| NUMERIQUE, CALCUL | Vide | Valeur numérique |
+| PHOTO | PHOTO_CAPTURED (DEC-10) | Vide |
+| SYSTEM (SYS_001) | Vide | Vide |
+
+Questions PHOTO (POT_010, LUM_012) : une ligne REPONSES est créée avec Valeur = PHOTO_CAPTURED (DEC-10). Les photos elles-mêmes sont stockées dans PHOTOS_INSPECTIONS.
 
 ---
 

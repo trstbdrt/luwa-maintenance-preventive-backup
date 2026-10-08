@@ -1,5 +1,16 @@
 # Changelog
 
+## Version 0.1.3
+
+Date : 2026-10-08
+
+Contenu :
+
+- Décisions techniques figées (docs/decisions/technical-decisions-v0.1.2.md, DEC-01 à DEC-10)
+- Schéma SharePoint finalisé
+- Fichiers modèles alignés
+- Build Readiness Review (docs/reviews/build-readiness-v0.1.3.md)
+
 ## Version 0.1.2
 
 Date : 2026-10-08

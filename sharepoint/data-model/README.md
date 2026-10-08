@@ -1,6 +1,6 @@
 # Fichiers de données modèles — SharePoint
 
-Version : 0.1.2
+Version : 0.1.3
 
 Date : 2026-10-08
 
@@ -25,6 +25,7 @@ Ces fichiers servent à :
 - La **source de vérité** des colonnes est `sharepoint-schema.md`.
 - La **source de vérité** du catalogue de questions est `sharepoint/questions/questions.csv`.
 - La **source de vérité** des règles est `sharepoint/regles/regles_formulaire.csv`.
+- Les décisions techniques appliquées sont dans `docs/decisions/technical-decisions-v0.1.2.md`.
 - **Aucune donnée réelle** : ouvrages, utilisateurs, GUID, dates et coordonnées sont fictifs.
   - Les noms d'ouvrage reprennent les exemples de format de la spécification (section 7).
   - Les utilisateurs utilisent le domaine réservé `example.com`.
@@ -55,7 +56,7 @@ Contrôle de l'inspection INS-20261008-000001 au regard des règles :
 | POT_004_2_A / B | 6 / 4.5 | 0 | Numériques |
 | POT_004_2_C | 25 | 0 | ((6 - 4.5) / 6) × 100 = 25 ; < 30 donc R131 vraie, R120 fausse (POT_004_3 masquée) |
 | POT_004_5 | FAIT | 1 | Affichée par R130 + R131 ; NbPhotosMin = 1 et R140 |
-| POT_010 | (photo) | 2 | NbPhotosMin = 2 |
+| POT_010 | PHOTO_CAPTURED | 2 | NbPhotosMin = 2 ; ligne REPONSES PHOTO_CAPTURED (DEC-10) |
 | POT_010B | NON | 0 | R400 / R401 non déclenchées (POT_010B_A masquée) |
 
 ---
@@ -66,7 +67,7 @@ Exemple de contenu de la liste **INSPECTIONS**.
 
 | Colonne | Commentaire |
 |------|------|
-| Title | Toujours égal à InspectionID (règle de remplissage du schéma) |
+| Title | Toujours égal à InspectionID (DEC-01) |
 | InspectionID | Identifiant lisible `INS-AAAAMMJJ-NNNNNN`, affichage uniquement |
 | InspectionGUID | Clé relationnelle unique (format GUID) |
 | TypeInspection | POTEAU ou LUMINAIRE |
@@ -76,9 +77,9 @@ Exemple de contenu de la liste **INSPECTIONS**.
 | DateDerniereModification | Dernière sauvegarde |
 | DateSoumission | Renseignée uniquement à la soumission (TERMINE) |
 | StatutInspection | BROUILLON, EN_COURS, TERMINE, INACCESSIBLE, ARCHIVE |
-| StatutTraitement | NON_ANALYSE dans tous les exemples (App 1 ne prend aucune décision métier) |
+| StatutTraitement | NON_ANALYSE à la création (DEC-02) ; App 1 n'écrit jamais d'autre valeur |
 | GPSLatitude / GPSLongitude | Facultatives ; vides dans deux exemples |
-| InspectionPrecedenteGUID | Renseigné dans l'exemple 000004 pour pointer vers l'inspection INACCESSIBLE 000003 (voir risques résiduels du rapport de cohérence) |
+| InspectionPrecedenteGUID | Renseigné dans l'exemple 000004 (« Accessible maintenant ») : InspectionGUID de la dernière inspection INACCESSIBLE 000003 (DEC-04) |
 
 ---
 
@@ -88,18 +89,20 @@ Exemple de contenu de la liste **REPONSES**. Une ligne = une réponse à une que
 
 | Colonne | Commentaire |
 |------|------|
-| ReponseID | Identifiant unique de la réponse ; format GUID utilisé dans les exemples (format non fixé par le schéma) |
+| Title | Toujours égal à ReponseID (DEC-01) |
+| ReponseID | GUID (DEC-03) |
 | InspectionGUID | Clé vers INSPECTIONS |
 | QuestionCode | Clé vers QUESTIONS |
-| Valeur | Réponses RADIO, CHECKBOX et TEXTE ; valeur prise dans ValeursPossibles |
+| Valeur | Texte multiligne (DEC-05). RADIO et CHECKBOX : valeur prise dans ValeursPossibles ; TEXTE : texte saisi ; PHOTO : PHOTO_CAPTURED (DEC-10) |
 | ValeurNumerique | Réponses NUMERIQUE et CALCUL |
 | Commentaire | Commentaire saisi via l'icône 💬 ; pour SYS_001, commentaire d'inaccessibilité |
 | DateEncodage | Date de saisie de la réponse |
 | UtilisateurEncodage | Utilisateur ayant saisi la réponse |
 
-Les questions de type PHOTO (POT_010, LUM_012) n'ont pas de ligne de réponse dans les
-exemples : leur complétude se mesure au nombre de photos. Ce choix de représentation
-n'est pas fixé par le schéma (voir rapport de cohérence).
+Les questions de type PHOTO (POT_010, LUM_012) ont une ligne de réponse avec
+Valeur = PHOTO_CAPTURED dès qu'au moins une photo est enregistrée (DEC-10).
+Exemple : POT_010 de l'inspection INS-20261008-000001.
+Leur complétude reste mesurée par le nombre de photos (NbPhotosMin ou PHOTO_MIN, DEC-06).
 
 ---
 
@@ -122,7 +125,8 @@ Exemple des métadonnées de la bibliothèque **PHOTOS_INSPECTIONS**.
 
 # questions-model.csv
 
-Gabarit de la liste **QUESTIONS** : en-tête complet identique à `questions.csv`
+Gabarit de la liste **QUESTIONS** au format du fichier d'import : en-tête identique à `questions.csv`
+(la colonne SharePoint Title = QuestionCode est ajoutée au moment de l'import, DEC-01)
 et une ligne d'exemple par type de question (RADIO, NUMERIQUE, CALCUL, CHECKBOX, PHOTO, TEXTE).
 
 **Ne jamais importer ce fichier dans SharePoint.**

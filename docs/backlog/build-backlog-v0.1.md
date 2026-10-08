@@ -24,8 +24,14 @@ et ne peuvent pas être réalisés avant décision.
 
 # Sprint 0 — Décisions préalables
 
+**Statut : clôturé en v0.1.3.** Décisions DEC-01 à DEC-10 documentées dans
+`docs/decisions/technical-decisions-v0.1.2.md`. Les points restant ouverts sont repris
+en DEC-11 et DEC-12 et dans `docs/reviews/build-readiness-v0.1.3.md`.
+
 | ID | Description | Priorité | Dépendances |
 |------|------|------|------|
+| DEC-11 | Fixer le mécanisme de génération du compteur NNNNNN de l'InspectionID (affichage uniquement, DEC-03) — bloque PA-07, pas le sprint SharePoint | P1 | — |
+| DEC-12 | Fixer la date de référence et les statuts concernés par l'archivage à 6 mois — bloque PAU-03 | P2 | — |
 | DEC-01 | Décider de l'usage de la colonne Title dans QUESTIONS, REGLES_FORMULAIRE et REPONSES | P1 | — |
 | DEC-02 | Fixer la valeur initiale de StatutTraitement à la création d'une inspection | P1 | — |
 | DEC-03 | Fixer le mécanisme de génération de l'InspectionID (`INS-AAAAMMJJ-NNNNNN`) et du ReponseID | P1 | — |
@@ -70,7 +76,7 @@ et ne peuvent pas être réalisés avant décision.
 | PA-04 | Screen_Type : choix POTEAU / LUMINAIRE | P1 | PA-01 |
 | PA-05 | Screen_Identification : saisie ouvrage, recherche historique, dernier statut | P1 | PA-04 |
 | PA-06 | Screen_Identification : avertissement de concurrence non bloquant | P1 | PA-05, DEC-08 |
-| PA-07 | Création d'inspection (GUID, InspectionID, Title, statut BROUILLON, GPS si disponible) | P1 | PA-05, DEC-02, DEC-03 |
+| PA-07 | Création d'inspection (GUID, InspectionID, Title, statut BROUILLON, GPS si disponible) | P1 | PA-05, DEC-02, DEC-03, DEC-11 |
 | PA-08 | Parcours « Ouvrage inaccessible » (SYS_001 : commentaire obligatoire, photo facultative, statut INACCESSIBLE) | P1 | PA-07 |
 | PA-09 | « Accessible maintenant » lorsque la dernière inspection est INACCESSIBLE | P2 | PA-07, DEC-04 |
 | PA-10 | Screen_Inspection : galerie dynamique par Formulaire, OrdreAffichage, DisplayGroup, QuestionParent | P1 | PA-02, PA-07 |
@@ -94,8 +100,8 @@ et ne peuvent pas être réalisés avant décision.
 |------|------|------|------|
 | PAU-01 | Export structuré : Export.zip contenant Export.xlsx et le dossier Photos/ | P1 | SP-08, SP-09, SP-10 |
 | PAU-02 | Export CSV des listes INSPECTIONS et REPONSES | P2 | PAU-01 |
-| PAU-03 | Archivage des inspections anciennes (cible 6 mois) : statut ARCHIVE, sans suppression | P2 | SP-08 |
-| PAU-04 | Génération de l'InspectionID côté serveur (si retenu en DEC-03) | P1 | DEC-03 |
+| PAU-03 | Archivage des inspections anciennes (cible 6 mois) : statut ARCHIVE, sans suppression | P2 | SP-08, DEC-12 |
+| PAU-04 | Génération de l'InspectionID côté serveur (si retenu en DEC-11) | P1 | DEC-11 |
 | PAU-05 | Création des dossiers photos `AAAA/MM/InspectionID/` (si non fait par Power Apps) | P2 | SP-10 |
 
 ---
