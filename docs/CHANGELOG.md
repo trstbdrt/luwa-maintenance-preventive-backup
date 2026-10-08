@@ -1,5 +1,15 @@
 # Changelog
 
+## Version 0.1.5
+
+Date : 2026-10-08
+
+Contenu :
+
+- Environnement SharePoint construit (site LuwaMaintenancePreventiveBackup) : 4 listes, bibliothèque PHOTOS_INSPECTIONS, 55 colonnes, 22 index
+- Import des catalogues : 34 questions, 29 règles, contenu vérifié identique aux CSV
+- Rapport de construction SharePoint (docs/build/sharepoint-build-report.md)
+
 ## Version 0.1.4
 
 Date : 2026-10-08
