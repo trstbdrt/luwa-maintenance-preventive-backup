@@ -1,7 +1,7 @@
 # LUWA Maintenance Preventive Backup
-## Écrans Power Apps — App 1 v0.1.4
+## Écrans Power Apps — App 1 v0.1.6
 
-Version : 0.1.4
+Version : 0.1.6
 
 Date : 2026-10-08
 
@@ -14,6 +14,7 @@ Références :
 - `sharepoint/regles/regles_formulaire.csv`
 - `docs/decisions/technical-decisions-v0.1.2.md`
 - `docs/decisions/technical-decisions-v0.1.3.md`
+- `docs/decisions/technical-decisions-v0.1.5.md`
 
 Ce document décrit les écrans sans Power Fx. Les comportements sont exprimés en langage naturel.
 
@@ -71,14 +72,15 @@ Les catalogues sont petits : ils sont chargés une fois et évalués localement.
 | Au moins une réponse enregistrée, non soumise | EN_COURS |
 | Soumission réussie | TERMINE |
 | Déclaration d'ouvrage inaccessible | INACCESSIBLE |
-| Archivage (hors App 1, après 6 mois) | ARCHIVE |
+| Archivage (hors App 1) : TERMINE ou INACCESSIBLE, plus de 183 jours sans modification (DEC-17) | ARCHIVE |
 
 Aucune suppression n'est possible, quel que soit le statut.
 
 ## Clé relationnelle
 
 Toutes les écritures dans REPONSES et PHOTOS_INSPECTIONS utilisent `InspectionGUID`.
-`InspectionID` (= `Title`) n'est utilisé que pour l'affichage et le nom du dossier photos.
+`InspectionID` (= `Title`) n'est utilisé que pour l'affichage : `TMP-…` pendant la saisie (DEC-15), `INS-AAAAMMJJ-NNNNNN` après attribution par Power Automate (DEC-14).
+Le dossier photos est nommé par l'InspectionGUID (DEC-16).
 
 ## Mode hors connexion (préparation)
 
@@ -198,9 +200,9 @@ puis démarrer l'inspection ou déclarer l'ouvrage inaccessible.
 
 Création d'une ligne INSPECTIONS :
 
-- InspectionGUID : nouveau GUID ;
-- InspectionGUID : généré immédiatement (DEC-11) ;
-- InspectionID : éventuellement temporaire pendant la saisie, valeur finale `INS-AAAAMMJJ-NNNNNN` attribuée lors de la synchronisation SharePoint (DEC-11) ; Title = InspectionID ;
+- InspectionGUID : nouveau GUID, généré immédiatement (DEC-11) ;
+- InspectionID = Title = `TMP-{8 premiers caractères du GUID}` (DEC-15) ; la valeur finale `INS-AAAAMMJJ-NNNNNN`
+  est attribuée par Power Automate après l'enregistrement dans SharePoint (DEC-14) ;
 - TypeInspection, NomOuvrage, Inspecteur = utilisateur connecté ;
 - DateCreation et DateDerniereModification = maintenant ;
 - StatutInspection = BROUILLON ;
@@ -317,9 +319,9 @@ Une question masquée n'est ni obligatoire, ni contrôlée à la soumission.
 ## Comportement « Enregistrer »
 
 - Écrit / met à jour les lignes REPONSES de l'inspection (clé InspectionGUID + QuestionCode ; à la création, ReponseID = Title = nouveau GUID).
-- Envoie les photos en attente dans PHOTOS_INSPECTIONS (dossier `AAAA/MM/InspectionID/`,
+- Envoie les photos en attente dans PHOTOS_INSPECTIONS (dossier `{InspectionGUID}/`, DEC-16,
   métadonnées InspectionGUID, QuestionCode, NomOuvrage, Auteur, DatePhoto, CompressionVersion).
-- Met à jour DateDerniereModification (date de référence de l'archivage, DEC-12).
+- Met à jour DateDerniereModification à chaque modification métier : réponse, commentaire, photo (date de référence de l'archivage, DEC-17).
 - Passe le statut de BROUILLON à EN_COURS dès qu'au moins une réponse existe.
 - Compression des photos : configurable, non systématique ; paramètres listés en DEC-07, stockage à définir.
 

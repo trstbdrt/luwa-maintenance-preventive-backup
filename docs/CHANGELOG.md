@@ -1,5 +1,16 @@
 # Changelog
 
+## Version 0.1.6
+
+Date : 2026-10-08
+
+Contenu :
+
+- Décisions DEC-14 à DEC-17 validées (docs/decisions/technical-decisions-v0.1.5.md)
+- Questions ouvertes OQ-01 à OQ-05 clôturées
+- Schéma SharePoint : InspectionID temporaire / final, dossiers photos par InspectionGUID, règle d'archivage
+- Build Readiness Review révisée : SharePoint, Power Apps et Power Automate READY
+
 ## Version 0.1.5
 
 Date : 2026-10-08

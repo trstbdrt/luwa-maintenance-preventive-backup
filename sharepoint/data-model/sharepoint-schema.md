@@ -1,13 +1,13 @@
 # LUWA Maintenance Preventive Backup
-## SharePoint Schema v0.1.4
+## SharePoint Schema v0.1.6
 
-Version : 0.1.4
+Version : 0.1.6
 
 Date : 2026-10-08
 
 Statut : Validé — référence technique complète
 
-Décisions appliquées : `docs/decisions/technical-decisions-v0.1.2.md` (DEC-01 à DEC-10) et `docs/decisions/technical-decisions-v0.1.3.md` (DEC-11, DEC-12)
+Décisions appliquées : `docs/decisions/technical-decisions-v0.1.2.md` (DEC-01 à DEC-10) `docs/decisions/technical-decisions-v0.1.3.md` (DEC-11, DEC-12) et `docs/decisions/technical-decisions-v0.1.5.md` (DEC-14 à DEC-17)
 
 ---
 
@@ -54,11 +54,11 @@ InspectionGUID est la clé principale et la clé relationnelle unique (DEC-03).
 
 Toutes les relations (REPONSES, PHOTOS_INSPECTIONS, InspectionPrecedenteGUID) utilisent InspectionGUID.
 
-InspectionID est un identifiant métier lisible, utilisé uniquement pour l'affichage. Il peut être temporaire pendant la saisie et reçoit sa valeur finale `INS-AAAAMMJJ-NNNNNN` lors de la synchronisation SharePoint ; aucune relation ne dépend de InspectionID (DEC-11).
+InspectionID est un identifiant métier lisible, utilisé uniquement pour l'affichage. Pendant la saisie, il vaut `TMP-{8 premiers caractères du GUID}` (DEC-15). Sa valeur finale `INS-AAAAMMJJ-NNNNNN` est attribuée par Power Automate lors de la synchronisation SharePoint : AAAAMMJJ = DateCreation, NNNNNN = ID SharePoint de l'élément sur 6 chiffres (DEC-14). Aucune relation ne dépend de InspectionID (DEC-11).
 
 InspectionGUID est généré immédiatement à la création de l'inspection (DEC-11).
 
-DateDerniereModification est mise à jour à chaque enregistrement ; elle est la date de référence de l'archivage : une inspection est archivable uniquement si Aujourd'hui - DateDerniereModification > 6 mois (DEC-12).
+DateDerniereModification est mise à jour à chaque modification métier (réponse, commentaire, photo) ; une consultation ne la modifie jamais, le passage en ARCHIVE non plus. Elle est la date de référence de l'archivage : une inspection est archivable si et seulement si son statut est TERMINE ou INACCESSIBLE et Aujourd'hui - DateDerniereModification > 183 jours (DEC-12, DEC-17).
 
 Le commentaire d'inaccessibilité est stocké dans REPONSES sur la question SYS_001.
 
@@ -264,15 +264,14 @@ Stockage physique.
 
 PHOTOS_INSPECTIONS
 
-    2026/
+    550e8400-e29b-41d4-a716-446655440000/
 
-        10/
+        Photo001.jpg
 
-            INS-20261008-000123/
+        Photo002.jpg
 
-                Photo001.jpg
-
-                Photo002.jpg
+Un dossier par inspection, nommé par son **InspectionGUID**, jamais par InspectionID.
+Aucun renommage ultérieur, notamment lors de l'attribution de l'InspectionID final (DEC-16).
 
 ---
 

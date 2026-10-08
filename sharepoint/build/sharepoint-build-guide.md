@@ -85,20 +85,17 @@ Décision DEC-01. La colonne Title reste obligatoire dans les quatre listes.
 
 ## Structure de dossiers
 
-Structure recommandée par le schéma :
+Structure définie par le schéma (DEC-16) :
 
 ```
 PHOTOS_INSPECTIONS
-    2026/
-        10/
-            INS-20261008-000123/
-                Photo001.jpg
-                Photo002.jpg
+    550e8400-e29b-41d4-a716-446655440000/
+        Photo001.jpg
+        Photo002.jpg
 ```
 
-- Niveau 1 : année (`AAAA`)
-- Niveau 2 : mois (`MM`)
-- Niveau 3 : InspectionID de l'inspection
+- Un dossier par inspection, à la racine de la bibliothèque, nommé par son **InspectionGUID**
+- Jamais par InspectionID ; aucun renommage lors de l'attribution de l'InspectionID final
 
 Les dossiers sont créés par l'application ou par Power Automate lors de l'enregistrement des photos.
 Ils ne sont pas créés à la main.
