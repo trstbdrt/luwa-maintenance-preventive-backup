@@ -1,5 +1,17 @@
 # Changelog
 
+## Version 0.1.2
+
+Date : 2026-10-08
+
+Contenu :
+
+- Ajout fichiers modèles SharePoint
+- Ajout guide de construction SharePoint
+- Ajout écrans Power Apps détaillés
+- Ajout backlog de build
+- Ajout rapport de cohérence du dépôt (docs/reviews/repository-consistency-report.md)
+
 ## Version 0.1.1
 
 Date : 2026-10-08

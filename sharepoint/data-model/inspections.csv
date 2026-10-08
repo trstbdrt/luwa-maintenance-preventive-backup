@@ -1,12 +1,5 @@
-ColumnName,Type,Required,Indexed
-InspectionID,SingleLineText,Yes,Yes
-InspectionGUID,SingleLineText,Yes,Yes
-TypeInspection,Choice,Yes,Yes
-NomOuvrage,SingleLineText,Yes,Yes
-Inspecteur,Person,Yes,No
-DateCreation,DateTime,Yes,No
-DateSoumission,DateTime,No,No
-StatutInspection,Choice,Yes,Yes
-StatutTraitement,Choice,Yes,Yes
-GPSLatitude,Number,No,No
-GPSLongitude,Number,No,No
+Title,InspectionID,InspectionGUID,TypeInspection,NomOuvrage,Inspecteur,DateCreation,DateDerniereModification,DateSoumission,StatutInspection,StatutTraitement,GPSLatitude,GPSLongitude,InspectionPrecedenteGUID
+INS-20261008-000001,INS-20261008-000001,3f2a9c4e-7b1d-4e8a-9c2f-1a5b6d7e8f90,POTEAU,E100 511,technicien.sol@example.com,2026-10-08T08:15:00Z,2026-10-08T09:02:00Z,2026-10-08T09:02:00Z,TERMINE,NON_ANALYSE,50.454100,3.952300,
+INS-20261008-000002,INS-20261008-000002,8b4e1d2a-5c6f-4a7b-8e9d-0f1a2b3c4d5e,LUMINAIRE,E100 511-1,technicien.nacelle@example.com,2026-10-08T10:30:00Z,2026-10-08T10:41:00Z,,EN_COURS,NON_ANALYSE,50.454180,3.952410,
+INS-20261008-000003,INS-20261008-000003,c7d8e9f0-1a2b-4c3d-8e4f-5a6b7c8d9e0f,POTEAU,K024 318-2,technicien.sol@example.com,2026-10-08T13:05:00Z,2026-10-08T13:09:00Z,,INACCESSIBLE,NON_ANALYSE,,,
+INS-20261009-000004,INS-20261009-000004,1e2f3a4b-5c6d-4e7f-9a8b-7c6d5e4f3a2b,POTEAU,K024 318-2,technicien.sol@example.com,2026-10-09T08:00:00Z,2026-10-09T08:00:00Z,,BROUILLON,NON_ANALYSE,,,c7d8e9f0-1a2b-4c3d-8e4f-5a6b7c8d9e0f

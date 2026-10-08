@@ -1,1 +1,8 @@
-ColumnName,Type,Required,Indexed
+QuestionCode,QuestionParent,DisplayGroup,Formulaire,OrdreAffichage,Libelle,TypeQuestion,Obligatoire,CommentaireAutorise,CommentaireObligatoire,PhotoAutorisee,NbPhotosMin,NbPhotosMax,VisibleParDefaut,ValeursPossibles,FormuleCalcul
+EX_001,,GENERAL,POTEAU,10,[EXEMPLE] Question a choix unique,RADIO,OUI,OUI,NON,OUI,1,10,OUI,"VALIDE|NON_VALIDE",
+EX_001_A,EX_001,GENERAL,POTEAU,11,[EXEMPLE] Mesure A en mm,NUMERIQUE,OUI,OUI,NON,NON,0,0,NON,,
+EX_001_B,EX_001,GENERAL,POTEAU,12,[EXEMPLE] Mesure B en mm,NUMERIQUE,OUI,OUI,NON,NON,0,0,NON,,
+EX_001_C,EX_001,GENERAL,POTEAU,13,[EXEMPLE] Ecart en pourcentage,CALCUL,OUI,NON,NON,NON,0,0,NON,,((EX_001_A-EX_001_B)/EX_001_A)*100
+EX_002,,GENERAL,POTEAU,20,[EXEMPLE] Action realisee,CHECKBOX,OUI,OUI,NON,OUI,0,10,OUI,"FAIT",
+EX_003,,GENERAL,POTEAU,30,[EXEMPLE] Photos de la zone,PHOTO,OUI,OUI,NON,OUI,2,10,OUI,,
+EX_004,,GENERAL,POTEAU,40,[EXEMPLE] Commentaire libre,TEXTE,NON,OUI,NON,NON,0,0,OUI,,
