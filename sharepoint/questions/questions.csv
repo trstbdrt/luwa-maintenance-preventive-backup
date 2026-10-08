@@ -1,0 +1,14 @@
+QuestionCode,Formulaire,Ordre,Libelle,TypeQuestion,Obligatoire,CommentaireAutorise,PhotoAutorisee,NbPhotosMin,NbPhotosMax,VisibleParDefaut
+LUM_001,LUMINAIRE,10,Controle visuel etat general du luminaire,RADIO,OUI,OUI,OUI,0,10,OUI
+LUM_002,LUMINAIRE,20,Nettoyage corps du luminaire,CHECKBOX,OUI,OUI,OUI,0,10,OUI
+LUM_003,LUMINAIRE,30,Nettoyage vitre,CHECKBOX,OUI,OUI,OUI,0,10,OUI
+LUM_004,LUMINAIRE,40,Remplacement joint etancheite,RADIO,OUI,OUI,OUI,0,10,OUI
+LUM_005,LUMINAIRE,50,Controle fonctionnement plateau LED,RADIO,OUI,OUI,OUI,0,10,OUI
+LUM_006,LUMINAIRE,60,Controle fonctionnement driver,RADIO,OUI,OUI,OUI,0,10,OUI
+LUM_007,LUMINAIRE,70,Controle visuel tete telegestion,RADIO,OUI,OUI,OUI,0,10,OUI
+LUM_008,LUMINAIRE,80,Verification connexions electriques,RADIO,OUI,OUI,OUI,0,10,OUI
+LUM_009,LUMINAIRE,90,Verification isolement cables,RADIO,OUI,OUI,OUI,0,10,OUI
+LUM_010,LUMINAIRE,100,Resserrage pieces fixation,CHECKBOX,OUI,OUI,OUI,0,10,OUI
+LUM_011,LUMINAIRE,110,Verification inclinaison luminaire,CHECKBOX,OUI,OUI,OUI,0,10,OUI
+LUM_012,LUMINAIRE,120,Photos generales,PHOTO,NON,OUI,OUI,0,10,OUI
+LUM_013,LUMINAIRE,130,Commentaires generaux,TEXTE,NON,OUI,NON,0,0,OUI

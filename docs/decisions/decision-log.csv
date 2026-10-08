@@ -1,0 +1,10 @@
+DecisionID,Date,Sujet,Decision
+D001,2026-10-08,Formulaires,Poteau et Luminaire séparés
+D002,2026-10-08,Photos,Compression configurable
+D003,2026-10-08,Brouillons,Sauvegarde autorisée même incomplète
+D004,2026-10-08,Soumission,Soumission uniquement si formulaire valide
+D005,2026-10-08,Historique,Consultation autorisée en lecture seule
+D006,2026-10-08,Inspection simultanée,Autorisée avec avertissement
+D007,2026-10-08,Suppression,Interdite
+D008,2026-10-08,App2,Validation chef de projet avant création des actions
+D009,2026-10-08,Export,Export structuré Excel plus photos

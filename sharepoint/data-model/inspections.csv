@@ -1,0 +1,13 @@
+ColumnName,Type,Required,Indexed
+InspectionID,SingleLineText,Yes,Yes
+InspectionGUID,SingleLineText,Yes,Yes
+TypeInspection,Choice,Yes,Yes
+NomOuvrage,SingleLineText,Yes,Yes
+Inspecteur,Person,Yes,No
+DateCreation,DateTime,Yes,No
+DateSoumission,DateTime,No,No
+StatutInspection,Choice,Yes,Yes
+CommentaireInaccessible,MultiLineText,No,No
+StatutTraitement,Choice,Yes,Yes
+GPSLatitude,Number,No,No
+GPSLongitude,Number,No,No
