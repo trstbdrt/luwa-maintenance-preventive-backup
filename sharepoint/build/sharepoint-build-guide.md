@@ -85,7 +85,7 @@ Décision DEC-01. La colonne Title reste obligatoire dans les quatre listes.
 
 ## Structure de dossiers
 
-Structure définie par le schéma (DEC-16) :
+Structure définie par le schéma (DEC-15) :
 
 ```
 PHOTOS_INSPECTIONS

@@ -1,12 +1,12 @@
 # LUWA Maintenance Preventive Backup
 ## Questions ouvertes
 
-Version : 0.1.6
+Version : 0.1.7
 
 Date : 2026-10-08
 
 Ce document liste les sujets encore ouverts.
-Les décisions prises (D001 à D009, DEC-01 à DEC-12, DEC-14 à DEC-17) ne sont pas reprises,
+Les décisions prises (D001 à D009, DEC-01 à DEC-17) ne sont pas reprises,
 à l'exception de la table de clôture ci-dessous.
 
 Priorités :
@@ -17,14 +17,14 @@ Priorités :
 
 ---
 
-# Questions clôturées en v0.1.6
+# Questions clôturées en v0.1.6 (numérotation définitive v0.1.7)
 
 | ID | Sujet | Clôturée par |
 |------|------|------|
-| OQ-01 | Format de l'InspectionID temporaire | DEC-15 |
+| OQ-01 | Format de l'InspectionID temporaire | DEC-13 |
 | OQ-02 | Attribution de la valeur finale de l'InspectionID | DEC-14 |
-| OQ-03 | Dossier photos tant que l'InspectionID est temporaire | DEC-16 |
-| OQ-04 | Statuts concernés par l'archivage | DEC-17 |
+| OQ-03 | Dossier photos tant que l'InspectionID est temporaire | DEC-15 |
+| OQ-04 | Statuts concernés par l'archivage | DEC-16 |
 | OQ-05 | Calcul du délai, effet de l'archivage, réouverture | DEC-17 |
 
 Détail : `docs/decisions/technical-decisions-v0.1.5.md`.

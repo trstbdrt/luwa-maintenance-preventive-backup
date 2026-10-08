@@ -1,5 +1,15 @@
 # Changelog
 
+## Version 0.1.7
+
+Date : 2026-10-08
+
+Contenu :
+
+- Numérotation définitive des décisions : DEC-13 à DEC-17 (remplace la numérotation provisoire DEC-14 à DEC-17 de la v0.1.6, contenu inchangé)
+  - DEC-13 InspectionID temporaire, DEC-14 InspectionID final, DEC-15 dossiers photos, DEC-16 statuts archivables, DEC-17 règle des 183 jours
+- Références mises à jour : questions ouvertes, backlog, Build Readiness Review, schéma SharePoint, écrans, guide, fichiers modèles
+
 ## Version 0.1.6
 
 Date : 2026-10-08

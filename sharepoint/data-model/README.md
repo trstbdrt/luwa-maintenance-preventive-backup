@@ -113,7 +113,7 @@ Exemple des métadonnées de la bibliothèque **PHOTOS_INSPECTIONS**.
 | Colonne | Commentaire |
 |------|------|
 | Name | **Colonne native SharePoint** (nom du fichier), absente du schéma car fournie par la bibliothèque |
-| FolderPath | **Information native SharePoint** (dossier du fichier), selon la structure du schéma `{InspectionGUID}/` (DEC-16) |
+| FolderPath | **Information native SharePoint** (dossier du fichier), selon la structure du schéma `{InspectionGUID}/` (DEC-15) |
 | InspectionGUID | Clé vers INSPECTIONS |
 | QuestionCode | Question à laquelle la photo est rattachée (obligatoire, y compris SYS_001) |
 | NomOuvrage | Copie du nom d'ouvrage pour la recherche |

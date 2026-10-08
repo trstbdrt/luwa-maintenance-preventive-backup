@@ -1,13 +1,13 @@
 # LUWA Maintenance Preventive Backup
 ## Build Readiness Review v0.1.3
 
-Version : 0.1.3 — révisée en v0.1.4 et v0.1.6
+Version : 0.1.3 — révisée en v0.1.4, v0.1.6 et v0.1.7
 
 Date : 2026-10-08
 
 Périmètre de la revue : **Sprint SharePoint** (construction des listes, de la bibliothèque et import des catalogues) et, depuis la révision v0.1.4, **démarrage du Sprint Power Apps**.
 
-Référentiel : tag `v0.1.3`, révisions aux tags `v0.1.4` (DEC-11, DEC-12) et `v0.1.6` (DEC-14 à DEC-17).
+Référentiel : tag `v0.1.3`, révisions aux tags `v0.1.4` (DEC-11, DEC-12), `v0.1.6` et `v0.1.7` (DEC-13 à DEC-17).
 
 ---
 
@@ -86,10 +86,11 @@ la colonne Title est ajoutée lors de l'import, conformément au guide de constr
 | DEC-10 | Questions PHOTO : PHOTO_CAPTURED | Validée | Appliquée (usage de Valeur) |
 | DEC-11 | InspectionGUID immédiat ; InspectionID temporaire puis définitif à la synchronisation | Validée (v0.1.4) | Règle de remplissage documentée |
 | DEC-12 | Archivage : référence DateDerniereModification, plus de 6 mois | Validée (v0.1.4) | Règle de remplissage documentée |
-| DEC-14 | InspectionID final par Power Automate : INS-{DateCreation}-{ID SharePoint} | Validée (v0.1.6) | Règle de remplissage documentée |
-| DEC-15 | InspectionID temporaire TMP-{8 premiers caractères du GUID} | Validée (v0.1.6) | Règle de remplissage documentée |
-| DEC-16 | Dossiers photos nommés par InspectionGUID, sans renommage | Validée (v0.1.6) | Structure de PHOTOS_INSPECTIONS mise à jour |
-| DEC-17 | Archivage : TERMINE / INACCESSIBLE, 183 jours, sans modifier DateDerniereModification | Validée (v0.1.6) | Règle de remplissage documentée |
+| DEC-13 | InspectionID temporaire TMP-{8 premiers caractères du GUID} | Validée (v0.1.7) | Règle de remplissage documentée |
+| DEC-14 | InspectionID final par Power Automate : INS-{DateCreation}-{ID SharePoint} | Validée (v0.1.7) | Règle de remplissage documentée |
+| DEC-15 | Dossiers photos nommés par InspectionGUID, sans renommage | Validée (v0.1.7) | Structure de PHOTOS_INSPECTIONS mise à jour |
+| DEC-16 | Statuts archivables : TERMINE, INACCESSIBLE | Validée (v0.1.7) | Règle de remplissage documentée |
+| DEC-17 | Archivage : 183 jours depuis DateDerniereModification, non modifiée par l'archivage ; seule une modification métier la réactive | Validée (v0.1.7) | Règle de remplissage documentée |
 
 Documents alignés sur ces décisions : schéma SharePoint, guide de construction,
 `powerapps/screens.md`, README des fichiers modèles, backlog (Sprint 0 clôturé).
@@ -100,7 +101,7 @@ Documents alignés sur ces décisions : schéma SharePoint, guide de constructio
 
 Liste détaillée : `docs/build/open-questions.md`.
 
-Questions clôturées en v0.1.6 : OQ-01 (DEC-15), OQ-02 (DEC-14), OQ-03 (DEC-16), OQ-04 et OQ-05 (DEC-17).
+Questions clôturées : OQ-01 (DEC-13), OQ-02 (DEC-14), OQ-03 (DEC-15), OQ-04 (DEC-16), OQ-05 (DEC-17).
 
 | ID | Point | Priorité | Bloque SharePoint ? | Bloque Power Apps ? | Bloque Power Automate ? |
 |------|------|------|------|------|------|
@@ -125,7 +126,7 @@ Aucun point ouvert de priorité P1.
 | RR5 | Index créés après dépassement de 5 000 éléments | Création des index avant tout import (guide § 0, § 5) |
 | RR6 | REPONSES.Valeur multiligne : non indexable, filtre non délégable | Valeur n'est jamais un critère de recherche (DEC-05) |
 | RR7 | InspectionID temporaire `TMP-…` affiché tant que Power Automate n'a pas attribué la valeur finale | Sans effet sur l'intégrité (relations par InspectionGUID) ; valeur finale unique par construction (DEC-14) |
-| RR9 | Tous les dossiers d'inspection sont à la racine de PHOTOS_INSPECTIONS (DEC-16) : au-delà de 5 000 dossiers, la navigation dans la vue par défaut de la bibliothèque est limitée | Sans effet pour l'application (accès par chemin et par métadonnées indexées) ; prévoir des vues filtrées sur les colonnes indexées |
+| RR9 | Tous les dossiers d'inspection sont à la racine de PHOTOS_INSPECTIONS (DEC-15) : au-delà de 5 000 dossiers, la navigation dans la vue par défaut de la bibliothèque est limitée | Sans effet pour l'application (accès par chemin et par métadonnées indexées) ; prévoir des vues filtrées sur les colonnes indexées |
 | RR8 | Colonne « Auteur » de PHOTOS_INSPECTIONS proche du libellé de la colonne native « Créé par » sur un site en français | Vérification du nom interne (guide § 3.5) |
 
 ---
@@ -141,8 +142,8 @@ Aucun point ouvert de priorité P1.
 Plus aucune décision de conception ne bloque le build :
 
 - SharePoint : listes, bibliothèque, colonnes, index et catalogues en place et conformes.
-- Power Apps : InspectionID temporaire (DEC-15) et dossiers photos (DEC-16) décidés ; seul OQ-06 (P2) reste à trancher avant PA-17.
-- Power Automate : attribution de l'InspectionID final (DEC-14, PAU-04) et archivage (DEC-17, PAU-03) décidés.
+- Power Apps : InspectionID temporaire (DEC-13) et dossiers photos (DEC-15) décidés ; seul OQ-06 (P2) reste à trancher avant PA-17.
+- Power Automate : attribution de l'InspectionID final (DEC-14, PAU-04) et archivage (DEC-16, DEC-17, PAU-03) décidés.
 
 Pré-requis opérationnels à exécuter avant l'ouverture de Power Apps Studio
 (`docs/build/powerapps-readiness.md`, constatés non réalisés dans `docs/build/sharepoint-build-report.md` § 8) :

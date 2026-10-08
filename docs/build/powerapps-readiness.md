@@ -79,7 +79,7 @@ Utiliser les fichiers `sharepoint/data-model/*.csv` sur un **site de test**, jam
 - [ ] Création manuelle d'une inspection d'exemple dans INSPECTIONS : enregistrement accepté, `StatutTraitement` prend `NON_ANALYSE` par défaut
 - [ ] Création d'une réponse dans REPONSES avec une `Valeur` de plus de 255 caractères : enregistrement accepté (DEC-05)
 - [ ] Création d'une réponse `Valeur = PHOTO_CAPTURED` (DEC-10) : enregistrement accepté
-- [ ] Dépôt d'une photo dans PHOTOS_INSPECTIONS, dossier `<InspectionGUID>/` (DEC-16), avec les 5 métadonnées obligatoires : enregistrement accepté
+- [ ] Dépôt d'une photo dans PHOTOS_INSPECTIONS, dossier `<InspectionGUID>/` (DEC-15), avec les 5 métadonnées obligatoires : enregistrement accepté
 - [ ] Champ Choice : une valeur hors liste est refusée
 - [ ] Les éléments de test sont conservés sur le site de test (aucune suppression)
 
@@ -110,7 +110,7 @@ Le concepteur Power Apps a pris connaissance de :
 - [ ] `sharepoint/data-model/sharepoint-schema.md` (règles de remplissage, utilisation des colonnes de valeur selon TypeQuestion)
 - [ ] DEC-01 à DEC-10 (`technical-decisions-v0.1.2.md`)
 - [ ] DEC-11 et DEC-12 (`technical-decisions-v0.1.3.md`)
-- [ ] DEC-14 à DEC-17 (`technical-decisions-v0.1.5.md`)
+- [ ] DEC-13 à DEC-17 (`technical-decisions-v0.1.5.md`)
 - [ ] `docs/build/open-questions.md`, en particulier :
   - [ ] OQ-06 (stockage des paramètres de compression) — à trancher avant PA-17
 - [ ] Exigences sensibles rappelées dans `screens.md` :
