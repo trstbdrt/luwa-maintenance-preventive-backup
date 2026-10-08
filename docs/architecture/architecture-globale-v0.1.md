@@ -267,7 +267,7 @@ Une inspection possède :
 
 Chaque photo possède obligatoirement :
 
-- InspectionID
+- InspectionGUID
 - QuestionCode
 
 Aucune photo ne peut exister sans association explicite à une question.
@@ -589,7 +589,7 @@ Les colonnes suivantes devront être indexées :
 
 ### Liste REPONSES
 
-- InspectionID
+- InspectionGUID
 - QuestionCode
 
 Cette indexation est indispensable pour supporter plusieurs centaines de milliers de réponses tout en restant compatible avec les limitations SharePoint et les contraintes de délégation Power Apps.
