@@ -1,0 +1,1125 @@
+Screens:
+  Screen_Inspection:
+    Properties:
+      Fill: =RGBA(245, 247, 250, 1)
+      OnVisible: |-
+        =// Inspection (relue si le réseau est disponible)
+        Set(gblInspection, IfError(LookUp(INSPECTIONS, InspectionGUID = gblInspectionGUID), gblInspection));
+        Set(gblInspectionID, Coalesce(gblInspection.InspectionID, gblInspectionID));
+        // Catalogue du formulaire et règles d'écran (TD § 4.6, § 5.2)
+        ClearCollect(colQuestionsFormulaire, Sort(Filter(colQuestions, Formulaire = gblTypeInspection), OrdreAffichage));
+        ClearCollect(
+            colReglesFormulaire,
+            Filter(
+                colRegles,
+                (Formulaire = gblTypeInspection || Formulaire = "ALL")
+                    && ConditionType in ["EQUALS", "GREATER_OR_EQUAL", "LESS_THAN", "VISIBLE"]
+            )
+        );
+        // Réponses : copie locale récupérée (hors connexion) ou relecture SharePoint
+        If(
+            gblRepriseLocale,
+            ClearCollect(colReponses, colReponsesLocales);
+            ClearCollect(colPhotos, colPhotosLocales);
+            Set(gblRepriseLocale, false),
+            ClearCollect(
+                colReponses,
+                ForAll(
+                    Filter(REPONSES, InspectionGUID = gblInspectionGUID),
+                    {
+                        ReponseID: ReponseID,
+                        QuestionCode: QuestionCode,
+                        Valeur: Valeur,
+                        ValeurNumerique: ValeurNumerique,
+                        Commentaire: Commentaire,
+                        SharePointID: ID,
+                        EtatSynchro: "SYNCHRONISEE"
+                    }
+                )
+            );
+            ClearCollect(
+                colPhotos,
+                ForAll(
+                    Filter(PHOTOS_INSPECTIONS, InspectionGUID = gblInspectionGUID),
+                    {
+                        PhotoLocaleID: Text(ID),
+                        QuestionCode: QuestionCode,
+                        Source: '{Thumbnail}'.Large,
+                        NomFichier: "",
+                        DatePhoto: DatePhoto,
+                        EtatSynchro: "ENVOYEE"
+                    }
+                )
+            )
+        );
+        ClearCollect(colEtatQuestions, ForAll(colQuestionsFormulaire, {QuestionCode: QuestionCode, Visible: VisibleParDefaut}));
+        UpdateContext({locQuestionActive: "", locAfficherPanneauCommentaire: false, locAfficherPanneauPhotos: false, locEnregistrementEnCours: false, locQuitterApresEnregistrement: false, locAllerResume: false, locCamera: 0});
+        Reset(galInspQuestions);
+        Select(btnInspEvaluer)
+    Children:
+      - lblInspTitre:
+          Control: Label@2.5.1
+          Properties:
+            Text: ="Inspection " & gblInspectionID & "  —  " & gblNomOuvrage
+            X: =40
+            Y: =16
+            Width: =900
+            Height: =50
+            Size: =22
+            FontWeight: =FontWeight.Semibold
+      - lblInspInfos:
+          Control: Label@2.5.1
+          Properties:
+            Text: |-
+              =gblTypeInspection & "  ·  " & gblInspection.StatutInspection.Value
+              & "  ·  créée le " & Text(gblInspection.DateCreation, "dd/mm/yyyy hh:mm")
+            X: =40
+            Y: =62
+            Width: =900
+            Height: =32
+      - lblInspEtatSynchro:
+          Control: Label@2.5.1
+          Properties:
+            Text: |-
+              =With(
+                  {n: CountRows(Filter(colReponses, EtatSynchro <> "SYNCHRONISEE")) + CountRows(Filter(colPhotos, EtatSynchro = "EN_ATTENTE"))},
+                  If(
+                      locEnregistrementEnCours, "Enregistrement en cours…",
+                      n = 0, "✔ Tout est enregistré",
+                      !Connection.Connected, "⚠ Hors connexion : " & n & " modification(s) conservée(s) sur l'appareil",
+                      n & " modification(s) non enregistrée(s)"
+                  )
+              )
+            Color: |-
+              =If(
+                  IsEmpty(Filter(colReponses, EtatSynchro <> "SYNCHRONISEE")) && IsEmpty(Filter(colPhotos, EtatSynchro = "EN_ATTENTE")),
+                  RGBA(16, 124, 16, 1),
+                  RGBA(176, 96, 0, 1)
+              )
+            Align: =Align.Right
+            X: =940
+            Y: =66
+            Width: =386
+            Height: =32
+      - lblInspReste:
+          Control: Label@2.5.1
+          Properties:
+            Text: |-
+              =If(
+                  gblResteObligatoires + gblResteCommentaires + gblRestePhotos = 0,
+                  "✔ Tout ce qui est obligatoire est complété",
+                  "Reste " & gblResteObligatoires & " question(s)"
+                  & If(gblRestePhotos > 0, ", " & gblRestePhotos & " photo(s)", "")
+                  & If(gblResteCommentaires > 0, ", " & gblResteCommentaires & " commentaire(s)", "")
+              )
+            Color: =If(gblResteObligatoires + gblResteCommentaires + gblRestePhotos = 0, RGBA(16, 124, 16, 1), RGBA(96, 94, 92, 1))
+            Align: =Align.Right
+            X: =940
+            Y: =16
+            Width: =386
+            Height: =50
+      - galInspQuestions:
+          Control: Gallery@2.15.0
+          Variant: BrowseLayout_Vertical_TwoTextOneImageVariant_ver5.0
+          Properties:
+            Items: =colQuestionsAffichees
+            X: =40
+            Y: =100
+            Width: =1286
+            Height: =580
+            TemplateSize: =92
+            TemplatePadding: =0
+            Default: =LookUp(colQuestionsAffichees, QuestionCode = gblQuestionCible)
+            TemplateFill: =If(ThisItem.QuestionCode = gblQuestionCible, RGBA(255, 244, 222, 1), RGBA(0, 0, 0, 0))
+          Children:
+            - lblQGroupe:
+                Control: Label@2.5.1
+                Properties:
+                  Visible: =ThisItem.DebutGroupe
+                  Text: |-
+                    =Switch(ThisItem.DisplayGroup, "GENERAL", "Général", "CORROSION", "Corrosion", "SUR_PONT", "Sur pont", ThisItem.DisplayGroup)
+                  Fill: =RGBA(225, 232, 242, 1)
+                  FontWeight: =FontWeight.Semibold
+                  X: =0
+                  Y: =0
+                  Width: =Parent.TemplateWidth
+                  Height: =22
+                  Size: =11
+                  PaddingLeft: =16
+            - lblQLibelle:
+                Control: Label@2.5.1
+                Properties:
+                  Text: |-
+                    =ThisItem.Libelle & If(ThisItem.ObligatoireEff, "  *", "")
+                  FontWeight: =FontWeight.Semibold
+                  X: =If(IsBlank(ThisItem.QuestionParent), 16, 56)
+                  Y: =If(ThisItem.DebutGroupe, 24, 6)
+                  Width: =Parent.TemplateWidth * 0.55
+                  Height: =28
+            - radQReponse:
+                Control: Classic/Radio
+                Properties:
+                  Visible: =ThisItem.TypeQuestion = "RADIO"
+                  Items: =Split(Coalesce(ThisItem.LibellesValeurs, ThisItem.ValeursPossibles), "|")
+                  Default: |-
+                    =With({wCodes: Split(ThisItem.ValeursPossibles, "|"), wLibs: Split(Coalesce(ThisItem.LibellesValeurs, ThisItem.ValeursPossibles), "|"), wV: LookUp(colReponses, QuestionCode = ThisItem.QuestionCode).Valeur}, With({wPos: First(Filter(Sequence(CountRows(wCodes)), Index(wCodes, Value).Value = wV)).Value}, If(IsBlank(wPos), wV, Index(wLibs, wPos).Value)))
+                  Size: =13
+                  PaddingTop: =0
+                  PaddingBottom: =0
+                  Layout: =Layout.Horizontal
+                  X: =If(IsBlank(ThisItem.QuestionParent), 16, 56)
+                  Y: =If(ThisItem.DebutGroupe, 50, 38)
+                  Width: =Parent.TemplateWidth - 260
+                  Height: =40
+                  OnChange: |-
+                    =With(
+                        {wCode: ThisItem.QuestionCode, wVal: With({wCodes: Split(ThisItem.ValeursPossibles, "|"), wLibs: Split(Coalesce(ThisItem.LibellesValeurs, ThisItem.ValeursPossibles), "|"), wL: Self.Selected.Value}, With({wPos: First(Filter(Sequence(CountRows(wLibs)), Index(wLibs, Value).Value = wL)).Value}, If(IsBlank(wPos), wL, Index(wCodes, wPos).Value))), wEx: LookUp(colReponses, QuestionCode = ThisItem.QuestionCode)},
+                        If(
+                            Coalesce(wEx.Valeur, "") <> Coalesce(wVal, ""),
+                            If(
+                                IsBlank(wEx),
+                                Collect(colReponses, {ReponseID: Text(GUID()), QuestionCode: wCode, Valeur: wVal, ValeurNumerique: Blank(), Commentaire: Blank(), SharePointID: Blank(), EtatSynchro: "NOUVELLE"}),
+                                Patch(colReponses, wEx, {Valeur: wVal, EtatSynchro: If(wEx.EtatSynchro = "NOUVELLE", "NOUVELLE", "MODIFIEE")})
+                            );
+                            Select(btnInspEvaluer)
+                        )
+                    )
+            - chkQReponse:
+                Control: Classic/CheckBox
+                Properties:
+                  Visible: =ThisItem.TypeQuestion = "CHECKBOX"
+                  Text: =First(Split(Coalesce(ThisItem.LibellesValeurs, ThisItem.ValeursPossibles), "|")).Value
+                  Default: |-
+                    =LookUp(colReponses, QuestionCode = ThisItem.QuestionCode).Valeur = First(Split(ThisItem.ValeursPossibles, "|")).Value
+                  X: =If(IsBlank(ThisItem.QuestionParent), 16, 56)
+                  Y: =If(ThisItem.DebutGroupe, 50, 38)
+                  Width: =300
+                  Height: =40
+                  OnCheck: |-
+                    =With(
+                        {wCode: ThisItem.QuestionCode, wVal: First(Split(ThisItem.ValeursPossibles, "|")).Value, wEx: LookUp(colReponses, QuestionCode = ThisItem.QuestionCode)},
+                        If(
+                            Coalesce(wEx.Valeur, "") <> wVal,
+                            If(
+                                IsBlank(wEx),
+                                Collect(colReponses, {ReponseID: Text(GUID()), QuestionCode: wCode, Valeur: wVal, ValeurNumerique: Blank(), Commentaire: Blank(), SharePointID: Blank(), EtatSynchro: "NOUVELLE"}),
+                                Patch(colReponses, wEx, {Valeur: wVal, EtatSynchro: If(wEx.EtatSynchro = "NOUVELLE", "NOUVELLE", "MODIFIEE")})
+                            );
+                            Select(btnInspEvaluer)
+                        )
+                    )
+                  OnUncheck: |-
+                    =With(
+                        {wEx: LookUp(colReponses, QuestionCode = ThisItem.QuestionCode)},
+                        If(
+                            !IsBlank(wEx) && !IsBlank(wEx.Valeur),
+                            Patch(colReponses, wEx, {Valeur: Blank(), EtatSynchro: If(wEx.EtatSynchro = "NOUVELLE", "NOUVELLE", "MODIFIEE")});
+                            Select(btnInspEvaluer)
+                        )
+                    )
+            - txtQNumerique:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  Visible: =ThisItem.TypeQuestion = "NUMERIQUE"
+                  Format: =TextFormat.Number
+                  Default: |-
+                    =With({wN: LookUp(colReponses, QuestionCode = ThisItem.QuestionCode).ValeurNumerique}, If(IsBlank(wN), "", Text(wN)))
+                  HintText: ="Valeur en mm"
+                  X: =If(IsBlank(ThisItem.QuestionParent), 16, 56)
+                  Y: =If(ThisItem.DebutGroupe, 50, 38)
+                  Width: =220
+                  Height: =40
+                  OnChange: |-
+                    =With(
+                        {
+                            wCode: ThisItem.QuestionCode,
+                            wVal: If(IsBlank(Trim(Self.Text)), Blank(), Value(Self.Text)),
+                            wEx: LookUp(colReponses, QuestionCode = ThisItem.QuestionCode)
+                        },
+                        If(
+                            IsBlank(wEx.ValeurNumerique) <> IsBlank(wVal) || wEx.ValeurNumerique <> wVal,
+                            If(
+                                IsBlank(wEx),
+                                Collect(colReponses, {ReponseID: Text(GUID()), QuestionCode: wCode, Valeur: Blank(), ValeurNumerique: wVal, Commentaire: Blank(), SharePointID: Blank(), EtatSynchro: "NOUVELLE"}),
+                                Patch(colReponses, wEx, {ValeurNumerique: wVal, EtatSynchro: If(wEx.EtatSynchro = "NOUVELLE", "NOUVELLE", "MODIFIEE")})
+                            );
+                            Select(btnInspEvaluer)
+                        )
+                    )
+            - btnQNumeriqueOK:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  Visible: =ThisItem.TypeQuestion = "NUMERIQUE"
+                  Text: ="OK"
+                  X: =If(IsBlank(ThisItem.QuestionParent), 16, 56) + 232
+                  Y: =If(ThisItem.DebutGroupe, 50, 38)
+                  Width: =80
+                  Height: =40
+                  OnSelect: =false
+            - lblQCalcul:
+                Control: Label@2.5.1
+                Properties:
+                  Visible: =ThisItem.TypeQuestion = "CALCUL"
+                  Text: |-
+                    =With(
+                        {wN: LookUp(colReponses, QuestionCode = ThisItem.QuestionCode).ValeurNumerique},
+                        If(
+                            ThisItem.CalculBloque, "Calcul impossible : épaisseur sans corrosion égale à 0",
+                            IsBlank(wN), "Calcul automatique : saisir les deux épaisseurs",
+                            "Perte calculée : " & Text(Round(wN, 1)) & " %"
+                        )
+                    )
+                  Color: =If(ThisItem.CalculBloque, RGBA(196, 43, 28, 1), RGBA(32, 31, 30, 1))
+                  X: =If(IsBlank(ThisItem.QuestionParent), 16, 56)
+                  Y: =If(ThisItem.DebutGroupe, 50, 38)
+                  Width: =700
+                  Height: =40
+            - txtQTexte:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  Visible: =ThisItem.TypeQuestion = "TEXTE"
+                  Mode: =TextMode.MultiLine
+                  Default: =LookUp(colReponses, QuestionCode = ThisItem.QuestionCode).Valeur
+                  X: =If(IsBlank(ThisItem.QuestionParent), 16, 56)
+                  Y: =If(ThisItem.DebutGroupe, 50, 38)
+                  Width: =Parent.TemplateWidth - 140
+                  Height: =40
+                  OnChange: |-
+                    =With(
+                        {wCode: ThisItem.QuestionCode, wVal: Self.Text, wEx: LookUp(colReponses, QuestionCode = ThisItem.QuestionCode)},
+                        If(
+                            Coalesce(wEx.Valeur, "") <> Coalesce(wVal, ""),
+                            If(
+                                IsBlank(wEx),
+                                Collect(colReponses, {ReponseID: Text(GUID()), QuestionCode: wCode, Valeur: wVal, ValeurNumerique: Blank(), Commentaire: Blank(), SharePointID: Blank(), EtatSynchro: "NOUVELLE"}),
+                                Patch(colReponses, wEx, {Valeur: wVal, EtatSynchro: If(wEx.EtatSynchro = "NOUVELLE", "NOUVELLE", "MODIFIEE")})
+                            );
+                            Select(btnInspEvaluer)
+                        )
+                    )
+            - lblQPhoto:
+                Control: Label@2.5.1
+                Properties:
+                  Visible: =ThisItem.TypeQuestion = "PHOTO"
+                  Text: |-
+                    ="Photos : utilisez l'appareil photo 📷 (minimum " & Max(1, ThisItem.PhotosMin) & ")"
+                  Italic: =true
+                  X: =If(IsBlank(ThisItem.QuestionParent), 16, 56)
+                  Y: =If(ThisItem.DebutGroupe, 50, 38)
+                  Width: =700
+                  Height: =40
+            - lblQCommentaire:
+                Control: Label@2.5.1
+                Properties:
+                  Text: |-
+                    =With(
+                        {wC: LookUp(colReponses, QuestionCode = ThisItem.QuestionCode).Commentaire},
+                        If(
+                            !IsBlank(wC), "💬 " & wC,
+                            ThisItem.CommentaireObligatoireEff, "💬 Commentaire obligatoire",
+                            ""
+                        )
+                    )
+                  Color: |-
+                    =If(
+                        ThisItem.CommentaireObligatoireEff && IsBlank(LookUp(colReponses, QuestionCode = ThisItem.QuestionCode).Commentaire),
+                        RGBA(196, 43, 28, 1),
+                        RGBA(96, 94, 92, 1)
+                    )
+                  Size: =12
+                  Italic: =true
+                  X: =Parent.TemplateWidth * 0.55
+                  Y: =If(ThisItem.DebutGroupe, 24, 6)
+                  Width: =Parent.TemplateWidth * 0.45 - 80
+                  Height: =28
+                  Align: =Align.Right
+            - icoQCommentaire:
+                Control: Classic/Icon@2.5.0
+                Properties:
+                  Visible: =ThisItem.CommentaireAutorise
+                  Icon: =Icon.Message
+                  Color: |-
+                    =If(
+                        ThisItem.CommentaireObligatoireEff && IsBlank(LookUp(colReponses, QuestionCode = ThisItem.QuestionCode).Commentaire),
+                        RGBA(196, 43, 28, 1),
+                        RGBA(15, 108, 189, 1)
+                    )
+                  X: =Parent.TemplateWidth - 64
+                  Y: =If(ThisItem.DebutGroupe, 50, 38)
+                  Width: =40
+                  Height: =40
+                  OnSelect: |-
+                    =UpdateContext({locQuestionActive: ThisItem.QuestionCode, locAfficherPanneauCommentaire: true});
+                    Reset(txtInspCommentaire)
+            - lblQPhotoCompteur:
+                Control: Label@2.5.1
+                Properties:
+                  Visible: =ThisItem.PhotoAutorisee
+                  Text: |-
+                    =With(
+                        {
+                            wN: CountRows(Filter(colPhotos, QuestionCode = ThisItem.QuestionCode)),
+                            wMin: If(ThisItem.TypeQuestion = "PHOTO" && ThisItem.ObligatoireEff, Max(1, ThisItem.PhotosMin), ThisItem.PhotosMin)
+                        },
+                        If(wMin = 0, If(wN = 0, "", Text(wN)), wN & "/" & wMin & If(wN >= wMin, " ✅", ""))
+                    )
+                  Color: |-
+                    =With(
+                        {
+                            wN: CountRows(Filter(colPhotos, QuestionCode = ThisItem.QuestionCode)),
+                            wMin: If(ThisItem.TypeQuestion = "PHOTO" && ThisItem.ObligatoireEff, Max(1, ThisItem.PhotosMin), ThisItem.PhotosMin)
+                        },
+                        If(wN < wMin, RGBA(196, 43, 28, 1), RGBA(16, 124, 16, 1))
+                    )
+                  Align: =Align.Right
+                  X: =Parent.TemplateWidth - 236
+                  Y: =If(ThisItem.DebutGroupe, 50, 38)
+                  Width: =100
+                  Height: =40
+            - icoQPhoto:
+                Control: Classic/Icon@2.5.0
+                Properties:
+                  Visible: =ThisItem.PhotoAutorisee
+                  Icon: =Icon.Camera
+                  Color: =RGBA(15, 108, 189, 1)
+                  X: =Parent.TemplateWidth - 124
+                  Y: =If(ThisItem.DebutGroupe, 50, 38)
+                  Width: =40
+                  Height: =40
+                  OnSelect: |-
+                    =UpdateContext({locQuestionActive: ThisItem.QuestionCode, locAfficherPanneauPhotos: true})
+            - rectQSeparateur:
+                Control: Rectangle@2.3.0
+                Properties:
+                  Fill: =RGBA(225, 228, 232, 1)
+                  X: =0
+                  Y: =Parent.TemplateHeight - 1
+                  Width: =Parent.TemplateWidth
+                  Height: =1
+      - btnInspEnregistrer:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Text: ="Enregistrer le brouillon"
+            X: =40
+            Y: =690
+            Width: =260
+            Height: =56
+            DisplayMode: =If(locEnregistrementEnCours, DisplayMode.Disabled, DisplayMode.Edit)
+            OnSelect: |-
+              =If(
+                  IsEmpty(Filter(colReponses, EtatSynchro <> "SYNCHRONISEE")) && IsEmpty(Filter(colPhotos, EtatSynchro = "EN_ATTENTE")),
+                  Notify("Aucune modification à enregistrer.", NotificationType.Information),
+                  !Connection.Connected,
+                  Notify("Hors connexion : les réponses restent sur l'appareil. Enregistrement automatique au retour du réseau.", NotificationType.Warning),
+                  UpdateContext({locEnregistrementEnCours: true});
+                  IfError(
+                      // 0. Photos en attente : envoi une par une par le flux PAU-06 (LUWA_EnvoyerPhoto) ; une photo en échec reste en attente
+                      ClearCollect(colPhotosAEnvoyer, Filter(colPhotos, EtatSynchro = "EN_ATTENTE"));
+                      ForAll(
+                          colPhotosAEnvoyer As wP,
+                          IfError(
+                              LUWA_EnvoyerPhoto.Run(
+                                  gblInspectionGUID,
+                                  wP.QuestionCode,
+                                  gblNomOuvrage,
+                                  wP.NomFichier,
+                                  Text(DateAdd(wP.DatePhoto, TimeZoneOffset(wP.DatePhoto), TimeUnit.Minutes), "yyyy-mm-ddThh:mm:ssZ"),
+                                  "COMPRESSEE",
+                                  wP.Source,
+                                  User().Email
+                              );
+                              Patch(colPhotos, LookUp(colPhotos, PhotoLocaleID = wP.PhotoLocaleID), {EtatSynchro: "ENVOYEE"}),
+                              false
+                          )
+                      );
+                      // 1. Nouvelles réponses (création groupée)
+                      If(
+                          !IsEmpty(Filter(colReponses, EtatSynchro = "NOUVELLE")),
+                          Patch(
+                              REPONSES,
+                              ForAll(
+                                  Filter(colReponses, EtatSynchro = "NOUVELLE"),
+                                  {
+                                      Title: ReponseID,
+                                      ReponseID: ReponseID,
+                                      InspectionGUID: gblInspectionGUID,
+                                      QuestionCode: QuestionCode,
+                                      Valeur: Valeur,
+                                      ValeurNumerique: ValeurNumerique,
+                                      Commentaire: Commentaire,
+                                      DateEncodage: Now(),
+                                      UtilisateurEncodage: nfPersonneCourante
+                                  }
+                              )
+                          )
+                      );
+                      // 2. Réponses modifiées (mise à jour groupée)
+                      If(
+                          !IsEmpty(Filter(colReponses, EtatSynchro = "MODIFIEE")),
+                          Patch(
+                              REPONSES,
+                              ForAll(
+                                  Filter(colReponses, EtatSynchro = "MODIFIEE"),
+                                  {
+                                      ID: SharePointID,
+                                      Valeur: Valeur,
+                                      ValeurNumerique: ValeurNumerique,
+                                      Commentaire: Commentaire,
+                                      DateEncodage: Now()
+                                  }
+                              )
+                          )
+                      );
+                      // 3. Inspection : date de modification (DEC-17), BROUILLON → EN_COURS
+                      Set(
+                          gblInspection,
+                          Patch(
+                              INSPECTIONS,
+                              LookUp(INSPECTIONS, InspectionGUID = gblInspectionGUID),
+                              {
+                                  DateDerniereModification: Now(),
+                                  StatutInspection: {
+                                      Value: If(
+                                          gblInspection.StatutInspection.Value = "BROUILLON",
+                                          "EN_COURS",
+                                          gblInspection.StatutInspection.Value
+                                      )
+                                  }
+                              }
+                          )
+                      );
+                      Set(gblInspectionID, gblInspection.InspectionID);
+                      // 4. Relecture : identifiants SharePoint, état synchronisé
+                      ClearCollect(
+                          colReponses,
+                          ForAll(
+                              Filter(REPONSES, InspectionGUID = gblInspectionGUID),
+                              {
+                                  ReponseID: ReponseID,
+                                  QuestionCode: QuestionCode,
+                                  Valeur: Valeur,
+                                  ValeurNumerique: ValeurNumerique,
+                                  Commentaire: Commentaire,
+                                  SharePointID: ID,
+                                  EtatSynchro: "SYNCHRONISEE"
+                              }
+                          )
+                      );
+                      IfError(SaveData(colReponses, "luwa_reponses"), false);
+                      IfError(SaveData(colPhotos, "luwa_photos"), false);
+                      If(
+                          !IsEmpty(Filter(colPhotos, EtatSynchro = "EN_ATTENTE")),
+                          Notify(
+                              CountRows(Filter(colPhotos, EtatSynchro = "EN_ATTENTE")) & " photo(s) non envoyée(s) : elles restent sur l'appareil. Réessayez l'enregistrement.",
+                              NotificationType.Warning
+                          ),
+                          gblResteObligatoires + gblResteCommentaires + gblRestePhotos = 0,
+                          Notify("Brouillon enregistré. Tout ce qui est obligatoire est complété.", NotificationType.Success),
+                          Notify(
+                              "Brouillon enregistré. Reste à compléter : " & gblResteObligatoires & " question(s)"
+                              & If(gblRestePhotos > 0, ", " & gblRestePhotos & " photo(s)", "")
+                              & If(gblResteCommentaires > 0, ", " & gblResteCommentaires & " commentaire(s)", "") & ".",
+                              NotificationType.Warning
+                          )
+                      );
+                      If(
+                          IsEmpty(Filter(colReponses, EtatSynchro <> "SYNCHRONISEE")) && IsEmpty(Filter(colPhotos, EtatSynchro = "EN_ATTENTE")),
+                          If(locQuitterApresEnregistrement, UpdateContext({locQuitterApresEnregistrement: false}); Navigate(Screen_Home, ScreenTransition.None));
+                          If(locAllerResume, UpdateContext({locAllerResume: false}); Navigate(Screen_Resume, ScreenTransition.None))
+                      ),
+                      Notify(
+                          "Enregistrement impossible : " & FirstError.Message & ". Les réponses restent sur l'appareil.",
+                          NotificationType.Error
+                      )
+                  );
+                  UpdateContext({locEnregistrementEnCours: false})
+              )
+      - btnInspAccueil:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Text: ="Accueil"
+            X: =320
+            Y: =690
+            Width: =200
+            Height: =56
+            OnSelect: |-
+              =If(
+                  IsEmpty(Filter(colReponses, EtatSynchro <> "SYNCHRONISEE")) && IsEmpty(Filter(colPhotos, EtatSynchro = "EN_ATTENTE")),
+                  Navigate(Screen_Home, ScreenTransition.None),
+                  !Connection.Connected,
+                  Notify("Hors connexion : enregistrez au retour du réseau avant de quitter l'inspection.", NotificationType.Warning),
+                  UpdateContext({locQuitterApresEnregistrement: true});
+                  Select(btnInspEnregistrer)
+              )
+      - btnInspResume:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Text: ="Résumé et soumission"
+            X: =540
+            Y: =690
+            Width: =280
+            Height: =56
+            OnSelect: |-
+              =If(
+                  IsEmpty(Filter(colReponses, EtatSynchro <> "SYNCHRONISEE")) && IsEmpty(Filter(colPhotos, EtatSynchro = "EN_ATTENTE")),
+                  Navigate(Screen_Resume, ScreenTransition.None),
+                  !Connection.Connected,
+                  Notify("Hors connexion : enregistrez au retour du réseau avant le résumé.", NotificationType.Warning),
+                  UpdateContext({locAllerResume: true});
+                  Select(btnInspEnregistrer)
+              )
+      - lblInspAide:
+          Control: Label@2.5.1
+          Properties:
+            Text: ="* obligatoire  ·  💬 commentaire  ·  📷 photos"
+            Size: =12
+            Color: =RGBA(96, 94, 92, 1)
+            Align: =Align.Right
+            X: =840
+            Y: =690
+            Width: =486
+            Height: =56
+      - btnInspEvaluer:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Visible: =false
+            Text: ="(technique) évaluer"
+            X: =0
+            Y: =0
+            Width: =10
+            Height: =10
+            OnSelect: |-
+              =// Moteur de règles en une seule formule (TD § 5.3) — pas de Select entre boutons (cycle interdit par Power Apps)
+              // Étape 2 : calculs. Format pris en charge : ((A-B)/C)*100 avec A, B, C des codes de questions
+              ForAll(
+                  Filter(colQuestionsFormulaire, TypeQuestion = "CALCUL") As wQ,
+                  With(
+                      {wM: Match(wQ.FormuleCalcul, "^\(\((?<a>[A-Z0-9_]+)-(?<b>[A-Z0-9_]+)\)/(?<c>[A-Z0-9_]+)\)\*100$")},
+                      With(
+                          {
+                              wA: LookUp(colReponses, QuestionCode = wM.a).ValeurNumerique,
+                              wB: LookUp(colReponses, QuestionCode = wM.b).ValeurNumerique,
+                              wC: LookUp(colReponses, QuestionCode = wM.c).ValeurNumerique,
+                              wEx: LookUp(colReponses, QuestionCode = wQ.QuestionCode)
+                          },
+                          With(
+                              {wRes: If(IsBlank(wA) || IsBlank(wB) || IsBlank(wC) || wC = 0, Blank(), (wA - wB) / wC * 100)},
+                              If(
+                                  IsBlank(wEx),
+                                  If(
+                                      !IsBlank(wRes),
+                                      Collect(colReponses, {ReponseID: Text(GUID()), QuestionCode: wQ.QuestionCode, Valeur: Blank(), ValeurNumerique: wRes, Commentaire: Blank(), SharePointID: Blank(), EtatSynchro: "NOUVELLE"})
+                                  ),
+                                  If(
+                                      IsBlank(wEx.ValeurNumerique) <> IsBlank(wRes) || wEx.ValeurNumerique <> wRes,
+                                      Patch(colReponses, wEx, {ValeurNumerique: wRes, EtatSynchro: If(wEx.EtatSynchro = "NOUVELLE", "NOUVELLE", "MODIFIEE")})
+                                  )
+                              )
+                          )
+                      )
+                  )
+              );
+              ClearCollect(colEtatQuestions, ForAll(colQuestionsFormulaire, {QuestionCode: QuestionCode, Visible: VisibleParDefaut}));
+              // Étape 3 — passe 1/3 : conditions (source masquée ou vide = fausse), puis visibilité
+              ClearCollect(
+                  colReglesEval,
+                  AddColumns(
+                      colReglesFormulaire,
+                      Vraie,
+                      With(
+                          {
+                              wVis: Coalesce(LookUp(colEtatQuestions, QuestionCode = QuestionSource).Visible, false),
+                              wRep: LookUp(colReponses, QuestionCode = QuestionSource)
+                          },
+                          Switch(
+                              ConditionType,
+                              "EQUALS",
+                              wVis && If(
+                                  !IsBlank(wRep.ValeurNumerique),
+                                  wRep.ValeurNumerique = Value(ConditionValeur),
+                                  !IsBlank(wRep.Valeur) && wRep.Valeur = ConditionValeur
+                              ),
+                              "GREATER_OR_EQUAL",
+                              wVis && !IsBlank(wRep.ValeurNumerique) && wRep.ValeurNumerique >= Value(ConditionValeur),
+                              "LESS_THAN",
+                              wVis && !IsBlank(wRep.ValeurNumerique) && wRep.ValeurNumerique < Value(ConditionValeur),
+                              "VISIBLE",
+                              wVis = (Upper(ConditionValeur) = "TRUE"),
+                              false
+                          )
+                      )
+                  )
+              );
+              With(
+                  {
+                      wMasque: !IsEmpty(Filter(colReglesEval, Vraie && Action = "MASQUER_FORMULAIRE")),
+                      wSourceMasque: LookUp(colReglesEval, Vraie && Action = "MASQUER_FORMULAIRE").QuestionSource
+                  },
+                  ClearCollect(
+                      colEtatQuestions,
+                      ForAll(
+                          colQuestionsFormulaire As wQ,
+                          {
+                              QuestionCode: wQ.QuestionCode,
+                              Visible: If(
+                                  wMasque && wQ.QuestionCode <> wSourceMasque,
+                                  false,
+                                  wQ.VisibleParDefaut
+                                      || !IsEmpty(Filter(colReglesEval, Vraie && Action = "AFFICHER" && QuestionCible = wQ.QuestionCode))
+                                      || (
+                                          !IsEmpty(Filter(colReglesEval, Vraie && Action = "AFFICHER_IF_MATCH" && QuestionCible = wQ.QuestionCode))
+                                          && !IsEmpty(Filter(colReglesEval, Vraie && Action = "WAITING_SECOND_CONDITION" && QuestionCible = wQ.QuestionCode))
+                                      )
+                              )
+                          }
+                      )
+                  )
+              );
+              // Étape 3 — passe 2/3 : conditions (source masquée ou vide = fausse), puis visibilité
+              ClearCollect(
+                  colReglesEval,
+                  AddColumns(
+                      colReglesFormulaire,
+                      Vraie,
+                      With(
+                          {
+                              wVis: Coalesce(LookUp(colEtatQuestions, QuestionCode = QuestionSource).Visible, false),
+                              wRep: LookUp(colReponses, QuestionCode = QuestionSource)
+                          },
+                          Switch(
+                              ConditionType,
+                              "EQUALS",
+                              wVis && If(
+                                  !IsBlank(wRep.ValeurNumerique),
+                                  wRep.ValeurNumerique = Value(ConditionValeur),
+                                  !IsBlank(wRep.Valeur) && wRep.Valeur = ConditionValeur
+                              ),
+                              "GREATER_OR_EQUAL",
+                              wVis && !IsBlank(wRep.ValeurNumerique) && wRep.ValeurNumerique >= Value(ConditionValeur),
+                              "LESS_THAN",
+                              wVis && !IsBlank(wRep.ValeurNumerique) && wRep.ValeurNumerique < Value(ConditionValeur),
+                              "VISIBLE",
+                              wVis = (Upper(ConditionValeur) = "TRUE"),
+                              false
+                          )
+                      )
+                  )
+              );
+              With(
+                  {
+                      wMasque: !IsEmpty(Filter(colReglesEval, Vraie && Action = "MASQUER_FORMULAIRE")),
+                      wSourceMasque: LookUp(colReglesEval, Vraie && Action = "MASQUER_FORMULAIRE").QuestionSource
+                  },
+                  ClearCollect(
+                      colEtatQuestions,
+                      ForAll(
+                          colQuestionsFormulaire As wQ,
+                          {
+                              QuestionCode: wQ.QuestionCode,
+                              Visible: If(
+                                  wMasque && wQ.QuestionCode <> wSourceMasque,
+                                  false,
+                                  wQ.VisibleParDefaut
+                                      || !IsEmpty(Filter(colReglesEval, Vraie && Action = "AFFICHER" && QuestionCible = wQ.QuestionCode))
+                                      || (
+                                          !IsEmpty(Filter(colReglesEval, Vraie && Action = "AFFICHER_IF_MATCH" && QuestionCible = wQ.QuestionCode))
+                                          && !IsEmpty(Filter(colReglesEval, Vraie && Action = "WAITING_SECOND_CONDITION" && QuestionCible = wQ.QuestionCode))
+                                      )
+                              )
+                          }
+                      )
+                  )
+              );
+              // Étape 3 — passe 3/3 : conditions (source masquée ou vide = fausse), puis visibilité
+              ClearCollect(
+                  colReglesEval,
+                  AddColumns(
+                      colReglesFormulaire,
+                      Vraie,
+                      With(
+                          {
+                              wVis: Coalesce(LookUp(colEtatQuestions, QuestionCode = QuestionSource).Visible, false),
+                              wRep: LookUp(colReponses, QuestionCode = QuestionSource)
+                          },
+                          Switch(
+                              ConditionType,
+                              "EQUALS",
+                              wVis && If(
+                                  !IsBlank(wRep.ValeurNumerique),
+                                  wRep.ValeurNumerique = Value(ConditionValeur),
+                                  !IsBlank(wRep.Valeur) && wRep.Valeur = ConditionValeur
+                              ),
+                              "GREATER_OR_EQUAL",
+                              wVis && !IsBlank(wRep.ValeurNumerique) && wRep.ValeurNumerique >= Value(ConditionValeur),
+                              "LESS_THAN",
+                              wVis && !IsBlank(wRep.ValeurNumerique) && wRep.ValeurNumerique < Value(ConditionValeur),
+                              "VISIBLE",
+                              wVis = (Upper(ConditionValeur) = "TRUE"),
+                              false
+                          )
+                      )
+                  )
+              );
+              With(
+                  {
+                      wMasque: !IsEmpty(Filter(colReglesEval, Vraie && Action = "MASQUER_FORMULAIRE")),
+                      wSourceMasque: LookUp(colReglesEval, Vraie && Action = "MASQUER_FORMULAIRE").QuestionSource
+                  },
+                  ClearCollect(
+                      colEtatQuestions,
+                      ForAll(
+                          colQuestionsFormulaire As wQ,
+                          {
+                              QuestionCode: wQ.QuestionCode,
+                              Visible: If(
+                                  wMasque && wQ.QuestionCode <> wSourceMasque,
+                                  false,
+                                  wQ.VisibleParDefaut
+                                      || !IsEmpty(Filter(colReglesEval, Vraie && Action = "AFFICHER" && QuestionCible = wQ.QuestionCode))
+                                      || (
+                                          !IsEmpty(Filter(colReglesEval, Vraie && Action = "AFFICHER_IF_MATCH" && QuestionCible = wQ.QuestionCode))
+                                          && !IsEmpty(Filter(colReglesEval, Vraie && Action = "WAITING_SECOND_CONDITION" && QuestionCible = wQ.QuestionCode))
+                                      )
+                              )
+                          }
+                      )
+                  )
+              );
+              // Étape 4 : évaluation finale des règles sur la visibilité stabilisée
+              // (profondeur des dépendances du catalogue v0.1 : 2 niveaux de visibilité ; 3 passes laissent une marge)
+              ClearCollect(
+                  colReglesEval,
+                  AddColumns(
+                      colReglesFormulaire,
+                      Vraie,
+                      With(
+                          {
+                              wVis: Coalesce(LookUp(colEtatQuestions, QuestionCode = QuestionSource).Visible, false),
+                              wRep: LookUp(colReponses, QuestionCode = QuestionSource)
+                          },
+                          Switch(
+                              ConditionType,
+                              "EQUALS",
+                              wVis && If(
+                                  !IsBlank(wRep.ValeurNumerique),
+                                  wRep.ValeurNumerique = Value(ConditionValeur),
+                                  !IsBlank(wRep.Valeur) && wRep.Valeur = ConditionValeur
+                              ),
+                              "GREATER_OR_EQUAL",
+                              wVis && !IsBlank(wRep.ValeurNumerique) && wRep.ValeurNumerique >= Value(ConditionValeur),
+                              "LESS_THAN",
+                              wVis && !IsBlank(wRep.ValeurNumerique) && wRep.ValeurNumerique < Value(ConditionValeur),
+                              "VISIBLE",
+                              wVis = (Upper(ConditionValeur) = "TRUE"),
+                              false
+                          )
+                      )
+                  )
+              );
+              // Étape 5 : état complet ; une question masquée n'est ni obligatoire ni contrôlée
+              ClearCollect(
+                  colEtatComplet,
+                  ForAll(
+                      colQuestionsFormulaire As wQ,
+                      With(
+                          {
+                              wVis: LookUp(colEtatQuestions, QuestionCode = wQ.QuestionCode).Visible,
+                              wPhotoMin: LookUp(colReglesEval, Vraie && Action = "PHOTO_MIN" && QuestionCible = wQ.QuestionCode)
+                          },
+                          Patch(
+                              wQ,
+                              {
+                                  Visible: wVis,
+                                  ObligatoireEff: wVis && (wQ.Obligatoire || !IsEmpty(Filter(colReglesEval, Vraie && Action = "RENDRE_OBLIGATOIRE" && QuestionCible = wQ.QuestionCode))),
+                                  CommentaireObligatoireEff: wVis && (wQ.CommentaireObligatoire || !IsEmpty(Filter(colReglesEval, Vraie && Action = "COMMENT_OBLIGATOIRE" && QuestionCible = wQ.QuestionCode))),
+                                  PhotosMin: If(!wVis, 0, IsBlank(wPhotoMin), wQ.NbPhotosMin, Value(wPhotoMin.Parametre)),
+                                  CalculBloque: !IsEmpty(Filter(colReglesEval, Vraie && Action = "BLOQUER_CALCUL" && QuestionCible = wQ.QuestionCode))
+                              }
+                          )
+                      )
+                  )
+              );
+              Set(gblSoumissionBloquee, !IsEmpty(Filter(colReglesEval, Vraie && Action = "BLOQUER_SOUMISSION")));
+              // Photos manquantes : question visible avec moins de photos que le minimum (PHOTO_MIN ou NbPhotosMin ; au moins 1 pour une question PHOTO obligatoire)
+              Set(
+                  gblRestePhotos,
+                  CountRows(
+                      Filter(
+                          colEtatComplet As wE,
+                          wE.Visible
+                              && CountRows(Filter(colPhotos, QuestionCode = wE.QuestionCode))
+                                  < If(wE.TypeQuestion = "PHOTO" && wE.ObligatoireEff, Max(1, wE.PhotosMin), wE.PhotosMin)
+                      )
+                  )
+              );
+              // Compteurs « reste à compléter » (les questions PHOTO sont comptées dans les photos)
+              Set(
+                  gblResteObligatoires,
+                  CountRows(
+                      Filter(
+                          colEtatComplet As wE,
+                          wE.ObligatoireEff && wE.TypeQuestion <> "PHOTO"
+                              && With({wR: LookUp(colReponses, QuestionCode = wE.QuestionCode)}, IsBlank(wR.Valeur) && IsBlank(wR.ValeurNumerique))
+                      )
+                  )
+              );
+              Set(
+                  gblResteCommentaires,
+                  CountRows(
+                      Filter(
+                          colEtatComplet As wE,
+                          wE.CommentaireObligatoireEff && IsBlank(LookUp(colReponses, QuestionCode = wE.QuestionCode).Commentaire)
+                      )
+                  )
+              );
+              // Lignes affichées, avec en-tête de groupe à chaque changement de DisplayGroup
+              ClearCollect(colQV, Sort(Filter(colEtatComplet, Visible), OrdreAffichage));
+              ClearCollect(
+                  colQuestionsAffichees,
+                  ForAll(
+                      Sequence(CountRows(colQV)) As wI,
+                      Patch(
+                          Index(colQV, wI.Value),
+                          {DebutGroupe: wI.Value = 1 || Index(colQV, wI.Value - 1).DisplayGroup <> Index(colQV, wI.Value).DisplayGroup}
+                      )
+                  )
+              );
+              // Protection locale (hors connexion) : copie de l'inspection en cours sur l'appareil
+              ClearCollect(
+                  colContexteLocal,
+                  {InspectionGUID: gblInspectionGUID, InspectionID: gblInspectionID, TypeInspection: gblTypeInspection, NomOuvrage: gblNomOuvrage}
+              );
+              IfError(SaveData(colContexteLocal, "luwa_contexte"), false);
+              IfError(SaveData(colReponses, "luwa_reponses"), false);
+              IfError(SaveData(colPhotos, "luwa_photos"), false)
+      - rectInspVoile:
+          Control: Rectangle@2.3.0
+          Properties:
+            Visible: =locAfficherPanneauCommentaire
+            Fill: =RGBA(0, 0, 0, 0.4)
+            X: =0
+            Y: =0
+            Width: =Parent.Width
+            Height: =Parent.Height
+      - conInspCommentaire:
+          Control: GroupContainer@1.3.0
+          Variant: ManualLayout
+          Properties:
+            Visible: =locAfficherPanneauCommentaire
+            Fill: =RGBA(255, 255, 255, 1)
+            X: =283
+            Y: =184
+            Width: =800
+            Height: =400
+          Children:
+            - lblInspCommentaireTitre:
+                Control: Label@2.5.1
+                Properties:
+                  Text: |-
+                    ="Commentaire — " & locQuestionActive & "  " & LookUp(colQuestions, QuestionCode = locQuestionActive).Libelle
+                  X: =30
+                  Y: =20
+                  Width: =740
+                  Height: =50
+                  FontWeight: =FontWeight.Semibold
+            - txtInspCommentaire:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  Mode: =TextMode.MultiLine
+                  Default: =LookUp(colReponses, QuestionCode = locQuestionActive).Commentaire
+                  X: =30
+                  Y: =80
+                  Width: =740
+                  Height: =200
+            - btnInspCommentaireOK:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  Text: ="OK"
+                  X: =30
+                  Y: =310
+                  Width: =200
+                  Height: =56
+                  OnSelect: |-
+                    =With(
+                        {wVal: Trim(txtInspCommentaire.Text), wEx: LookUp(colReponses, QuestionCode = locQuestionActive)},
+                        If(
+                            Coalesce(wEx.Commentaire, "") <> Coalesce(wVal, ""),
+                            If(
+                                IsBlank(wEx),
+                                Collect(colReponses, {ReponseID: Text(GUID()), QuestionCode: locQuestionActive, Valeur: Blank(), ValeurNumerique: Blank(), Commentaire: wVal, SharePointID: Blank(), EtatSynchro: "NOUVELLE"}),
+                                Patch(colReponses, wEx, {Commentaire: wVal, EtatSynchro: If(wEx.EtatSynchro = "NOUVELLE", "NOUVELLE", "MODIFIEE")})
+                            );
+                            Select(btnInspEvaluer)
+                        )
+                    );
+                    UpdateContext({locAfficherPanneauCommentaire: false})
+            - btnInspCommentaireAnnuler:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  Text: ="Annuler"
+                  X: =260
+                  Y: =310
+                  Width: =200
+                  Height: =56
+                  OnSelect: |-
+                    =UpdateContext({locAfficherPanneauCommentaire: false})
+      - rectInspVoilePhotos:
+          Control: Rectangle@2.3.0
+          Properties:
+            Visible: =locAfficherPanneauPhotos
+            Fill: =RGBA(0, 0, 0, 0.5)
+            X: =0
+            Y: =0
+            Width: =Parent.Width
+            Height: =Parent.Height
+      - conInspPhotos:
+          Control: GroupContainer@1.3.0
+          Variant: ManualLayout
+          Properties:
+            Visible: =locAfficherPanneauPhotos
+            Fill: =RGBA(255, 255, 255, 1)
+            X: =103
+            Y: =40
+            Width: =1160
+            Height: =690
+          Children:
+            - lblPhotoTitre:
+                Control: Label@2.5.1
+                Properties:
+                  Text: ="Photos — " & LookUp(colQuestions, QuestionCode = locQuestionActive).Libelle
+                  FontWeight: =FontWeight.Semibold
+                  Size: =18
+                  X: =24
+                  Y: =12
+                  Width: =820
+                  Height: =44
+            - lblPhotoCompteur:
+                Control: Label@2.5.1
+                Properties:
+                  Text: |-
+                    =With(
+                        {
+                            wQ: LookUp(colEtatComplet, QuestionCode = locQuestionActive),
+                            wN: CountRows(Filter(colPhotos, QuestionCode = locQuestionActive))
+                        },
+                        With(
+                            {wMin: If(wQ.TypeQuestion = "PHOTO" && wQ.ObligatoireEff, Max(1, wQ.PhotosMin), wQ.PhotosMin)},
+                            wN & " photo(s)" & If(wMin > 0, "  ·  minimum " & wMin & If(wN >= wMin, " ✅", ""), "") & "  ·  maximum " & wQ.NbPhotosMax
+                        )
+                    )
+                  Align: =Align.Right
+                  X: =850
+                  Y: =12
+                  Width: =286
+                  Height: =44
+            - camInspPhoto:
+                Control: Camera
+                Properties:
+                  Camera: =locCamera
+                  X: =24
+                  Y: =64
+                  Width: =720
+                  Height: =540
+                  OnSelect: |-
+                    =If(
+                        CountRows(Filter(colPhotos, QuestionCode = locQuestionActive)) >= LookUp(colQuestions, QuestionCode = locQuestionActive).NbPhotosMax,
+                        Notify("Nombre maximal de photos atteint pour cette question.", NotificationType.Warning),
+                        With(
+                            {wNow: Now()},
+                            Collect(
+                                colPhotos,
+                                {
+                                    PhotoLocaleID: Text(GUID()),
+                                    QuestionCode: locQuestionActive,
+                                    Source: Substitute(JSON(Self.Photo, JSONFormat.IncludeBinaryData), Char(34), ""),
+                                    NomFichier: locQuestionActive & "_" & Text(wNow, "yyyymmdd_hhmmss") & "_" & Left(Text(GUID()), 4) & ".jpg",
+                                    DatePhoto: wNow,
+                                    EtatSynchro: "EN_ATTENTE"
+                                }
+                            )
+                        );
+                        // Question de type PHOTO : réponse PHOTO_CAPTURED dès la première photo (DEC-10)
+                        With(
+                            {wEx: LookUp(colReponses, QuestionCode = locQuestionActive)},
+                            If(
+                                LookUp(colQuestions, QuestionCode = locQuestionActive).TypeQuestion = "PHOTO",
+                                If(
+                                    IsBlank(wEx),
+                                    Collect(colReponses, {ReponseID: Text(GUID()), QuestionCode: locQuestionActive, Valeur: "PHOTO_CAPTURED", ValeurNumerique: Blank(), Commentaire: Blank(), SharePointID: Blank(), EtatSynchro: "NOUVELLE"}),
+                                    IsBlank(wEx.Valeur),
+                                    Patch(colReponses, wEx, {Valeur: "PHOTO_CAPTURED", EtatSynchro: If(wEx.EtatSynchro = "NOUVELLE", "NOUVELLE", "MODIFIEE")})
+                                )
+                            )
+                        );
+                        Select(btnInspEvaluer)
+                    )
+            - lblPhotoAide:
+                Control: Label@2.5.1
+                Properties:
+                  Text: ="Touchez l'image pour prendre la photo."
+                  Italic: =true
+                  X: =24
+                  Y: =612
+                  Width: =500
+                  Height: =36
+            - btnPhotoCamera:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  Text: ="Changer de caméra"
+                  X: =544
+                  Y: =612
+                  Width: =200
+                  Height: =48
+                  OnSelect: |-
+                    =UpdateContext({locCamera: If(locCamera = 0, 1, 0)})
+            - galPhotosQuestion:
+                Control: Gallery@2.15.0
+                Variant: BrowseLayout_Vertical_TwoTextOneImageVariant_ver5.0
+                Properties:
+                  Items: =Filter(colPhotos, QuestionCode = locQuestionActive)
+                  X: =768
+                  Y: =64
+                  Width: =368
+                  Height: =540
+                  TemplateSize: =150
+                Children:
+                  - imgPhotoMiniature:
+                      Control: Image@2.2.3
+                      Properties:
+                        Image: =ThisItem.Source
+                        X: =4
+                        Y: =4
+                        Width: =220
+                        Height: =140
+                  - lblPhotoEtat:
+                      Control: Label@2.5.1
+                      Properties:
+                        Text: =If(ThisItem.EtatSynchro = "ENVOYEE", "Envoyée", "À envoyer")
+                        Size: =11
+                        X: =232
+                        Y: =8
+                        Width: =120
+                        Height: =28
+                  - icoPhotoSupprimer:
+                      Control: Classic/Icon@2.5.0
+                      Properties:
+                        Visible: =ThisItem.EtatSynchro = "EN_ATTENTE"
+                        Icon: =Icon.Trash
+                        Color: =RGBA(196, 43, 28, 1)
+                        X: =240
+                        Y: =60
+                        Width: =40
+                        Height: =40
+                        OnSelect: |-
+                          =Remove(colPhotos, ThisItem);
+                          Select(btnInspEvaluer)
+            - btnPhotoFermer:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  Text: ="Fermer"
+                  X: =936
+                  Y: =620
+                  Width: =200
+                  Height: =52
+                  OnSelect: |-
+                    =UpdateContext({locAfficherPanneauPhotos: false})
