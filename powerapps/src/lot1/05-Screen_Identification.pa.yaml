@@ -11,7 +11,9 @@ Screens:
             locRechercheFaite: false,
             locAfficherPanneauInaccessible: false,
             locOperationEnCours: false,
-            locInspectionSansCommentaire: Blank()
+            locInspectionSansCommentaire: Blank(),
+            locNomPoteauParent: "",
+            locDernierePoteauParent: Blank()
         })
     Children:
       - lblIdentTitre:
@@ -59,6 +61,27 @@ Screens:
                       )
                   ),
                   locRechercheFaite: true
+              });
+              // Luminaire « E100 511-1 » : informations du poteau parent « E100 511 » (information non bloquante)
+              UpdateContext({
+                  locNomPoteauParent: If(
+                      gblTypeInspection = "LUMINAIRE" && IsMatch(gblNomOuvrage, ".*-[0-9]+"),
+                      Left(gblNomOuvrage, Len(gblNomOuvrage) - Len(Last(Split(gblNomOuvrage, "-")).Value) - 1),
+                      ""
+                  )
+              });
+              UpdateContext({
+                  locDernierePoteauParent: If(
+                      IsBlank(locNomPoteauParent),
+                      Blank(),
+                      First(
+                          Sort(
+                              Filter(INSPECTIONS, NomOuvrage = locNomPoteauParent && TypeInspection.Value = "POTEAU"),
+                              DateCreation,
+                              SortOrder.Descending
+                          )
+                      )
+                  )
               })
       - lblIdentDerniere:
           Control: Label@2.5.1
@@ -220,6 +243,51 @@ Screens:
             Y: =390
             Width: =720
             Height: =36
+      - lblIdentFormat:
+          Control: Label@2.5.1
+          Properties:
+            Visible: |-
+              =locRechercheFaite && (
+                  (gblTypeInspection = "LUMINAIRE" && !IsMatch(gblNomOuvrage, ".*-[0-9]+"))
+                  || (gblTypeInspection = "POTEAU" && IsMatch(gblNomOuvrage, ".*-[0-9]+"))
+              )
+            Text: |-
+              =If(
+                  gblTypeInspection = "LUMINAIRE",
+                  "Vérifiez le nom : un luminaire se termine normalement par -1, -2… (ex. E100 511-1).",
+                  "Vérifiez le nom : un nom terminé par -1, -2… désigne normalement un luminaire."
+              )
+            Color: =RGBA(176, 96, 0, 1)
+            X: =40
+            Y: =440
+            Width: =720
+            Height: =40
+      - lblIdentPoteauParent:
+          Control: Label@2.5.1
+          Properties:
+            Visible: =locRechercheFaite && !IsBlank(locNomPoteauParent)
+            Text: |-
+              ="Poteau " & locNomPoteauParent & " : "
+              & If(
+                  IsBlank(locDernierePoteauParent),
+                  "aucune inspection connue.",
+                  "dernière inspection "
+                  & Switch(
+                      locDernierePoteauParent.StatutInspection.Value,
+                      "TERMINE", "terminée",
+                      "EN_COURS", "en cours",
+                      "BROUILLON", "en brouillon",
+                      "INACCESSIBLE", "INACCESSIBLE",
+                      "ARCHIVE", "archivée",
+                      "ABANDONNE", "abandonnée",
+                      locDernierePoteauParent.StatutInspection.Value
+                  )
+                  & " le " & Text(locDernierePoteauParent.DateCreation, "dd/mm/yyyy") & "."
+              )
+            X: =40
+            Y: =490
+            Width: =720
+            Height: =40
       - btnIdentRetour:
           Control: Classic/Button@2.2.0
           Properties:

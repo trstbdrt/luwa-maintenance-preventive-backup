@@ -70,6 +70,8 @@ Utiliser des ouvrages fictifs (`TEST-001`, `TEST-002`…) : aucune suppression n
 | T16 | Accueil > Reprendre > « Abandonner » sur l'inspection de T02, confirmer | Elle disparaît de la liste ; `TEST-001` en Poteau n'affiche plus l'avertissement | INSPECTIONS : ABANDONNE, DateDerniereModification mise à jour (DEC-20) |
 | T17 | Identification `test-001` (minuscules) | Mêmes inspections que `TEST-001` ; nouvelle inspection enregistrée `TEST-001` | DEC-21 |
 | T18 | `TEST-002` déclaré inaccessible en Poteau, puis Luminaire sur `TEST-002` (cas d'erreur de saisie) | Pas de « Accessible maintenant » en Luminaire | DEC-22 |
+| T19 | Luminaire sur `TEST-001` (sans -N) ; puis Poteau sur `TEST-001-1` | Message orange « Vérifiez le nom… » ; création toujours possible (non bloquant) | — |
+| T20 | Luminaire sur `TEST-002-1` après T13 | Ligne « Poteau TEST-002 : dernière inspection INACCESSIBLE le … » | — |
 | T15b | Identification `TEST-001` > clic sur une inspection de la liste | Historique ouvert directement sur l'inspection ; Retour → Identification | — |
 
 Points à observer pendant les tests :
