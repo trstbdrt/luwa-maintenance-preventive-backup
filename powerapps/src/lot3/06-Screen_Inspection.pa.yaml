@@ -894,16 +894,21 @@ Screens:
                   )
               );
               Set(gblSoumissionBloquee, !IsEmpty(Filter(colReglesEval, Vraie && Action = "BLOQUER_SOUMISSION")));
-              // Photos manquantes : question visible avec moins de photos que le minimum (PHOTO_MIN ou NbPhotosMin ; au moins 1 pour une question PHOTO obligatoire)
+              // Photos manquantes : nombre total de photos qui manquent (minimum PHOTO_MIN ou NbPhotosMin ; au moins 1 pour une question PHOTO obligatoire)
               Set(
                   gblRestePhotos,
-                  CountRows(
-                      Filter(
+                  Sum(
+                      ForAll(
                           colEtatComplet As wE,
-                          wE.Visible
-                              && CountRows(Filter(colPhotos, QuestionCode = wE.QuestionCode))
-                                  < If(wE.TypeQuestion = "PHOTO" && wE.ObligatoireEff, Max(1, wE.PhotosMin), wE.PhotosMin)
-                      )
+                          {
+                              N: If(
+                                  wE.Visible,
+                                  Max(0, If(wE.TypeQuestion = "PHOTO" && wE.ObligatoireEff, Max(1, wE.PhotosMin), wE.PhotosMin) - CountRows(Filter(colPhotos, QuestionCode = wE.QuestionCode))),
+                                  0
+                              )
+                          }
+                      ),
+                      N
                   )
               );
               // Compteurs « reste à compléter » (les questions PHOTO sont comptées dans les photos)
