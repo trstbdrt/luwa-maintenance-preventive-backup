@@ -27,3 +27,9 @@
 
 `09-Screen_Resume.pa.yaml` : les questions du récapitulatif (et du rapport PDF) portent le même numéro que dans le formulaire.
 Étapes : supprimer **Screen_Resume**, coller le fichier ; Save ; Publish.
+
+## Accueil (5.0)
+
+`04-Screen_Home.pa.yaml` : la liste « Reprendre » affiche le nom de l'ouvrage et « Poteau / Luminaire · modifiée le … »
+(plus d'identifiant ni de statut) ; messages de récupération locale et d'abandon sans identifiant.
+Étapes : supprimer **Screen_Home**, coller le fichier ; Save ; Publish.
