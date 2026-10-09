@@ -285,3 +285,21 @@ Sur l'écran d'identification, pour un même ouvrage et un même type d'inspecti
 
 - Les inspections soumises avant le lot 4 n'ont pas de réponses dans l'export (pas de `RapportCSV`).
 - Le flux utilise les variables d'environnement : portable avec la solution.
+
+---
+
+# DEC-31 — File d'envoi sur la tablette (hors connexion, lot 6a)
+
+## Décision
+
+- Les inspections non envoyées sont gardées sur la tablette dans une **file d'envoi** (jusqu'à 20 ; alerte à 15), chacune
+  avec ses réponses et photos ; une soumission hors connexion est mise en file (« À envoyer »).
+- **Envoi automatique** au retour du réseau, une inspection à la fois, reprenable sans doublon ; bouton « Envoyer maintenant ».
+- Écran **Envois** : suivi de la file (brouillon, à envoyer, en cours, erreur, envoyées aujourd'hui).
+- Remplace le blocage « inspection non enregistrée » (DEC-25) : la copie non envoyée entre automatiquement dans la file.
+- Lot 6b (à suivre) : commencer une inspection hors connexion (catalogue en cache, contrôle de concurrence à l'envoi).
+
+## Conséquences
+
+- Fonctionne dans l'application mobile Power Apps (stockage local) ; à valider sur tablette (mémoire avec beaucoup de photos).
+- Deux techniciens hors ligne sur le même ouvrage peuvent créer deux inspections (signalé au lot 6b).

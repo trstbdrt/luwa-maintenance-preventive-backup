@@ -1,0 +1,586 @@
+Screens:
+  Screen_Home:
+    Properties:
+      Fill: =RGBA(245, 247, 250, 1)
+      OnVisible: |-
+        =UpdateContext({locInspectionAAbandonner: Blank(), locOperationEnCours: false});
+        // Protection hors connexion : inspection restée sur l'appareil sans être enregistrée dans SharePoint
+        IfError(LoadData(colReponsesLocales, "luwa_reponses", true), false);
+        IfError(LoadData(colContexteLocal, "luwa_contexte", true), false);
+        IfError(LoadData(colPhotosLocales, "luwa_photos", true), false);
+        // Copie de travail non envoyée (app fermée en cours d'inspection) : rangée automatiquement dans la file d'envoi
+        If(
+            (
+                !IsEmpty(Filter(colReponsesLocales, EtatSynchro <> "SYNCHRONISEE"))
+                    || !IsEmpty(Filter(colPhotosLocales, EtatSynchro = "EN_ATTENTE"))
+            ) && !IsEmpty(colContexteLocal) && !IsBlank(First(colContexteLocal).InspectionGUID),
+            With(
+                {wC: First(colContexteLocal)},
+                IfError(SaveData(colReponsesLocales, "luwa_rep_" & wC.InspectionGUID); true, false);
+                IfError(SaveData(colPhotosLocales, "luwa_pho_" & wC.InspectionGUID); true, false);
+                RemoveIf(colFile, InspectionGUID = wC.InspectionGUID);
+                Collect(
+                    colFile,
+                    {
+                        InspectionGUID: wC.InspectionGUID,
+                        InspectionID: wC.InspectionID,
+                        NomOuvrage: wC.NomOuvrage,
+                        TypeInspection: wC.TypeInspection,
+                        Soumise: false,
+                        Etat: "BROUILLON",
+                        DateCreation: Now(),
+                        DateAjout: Now(),
+                        DateSoumission: Blank(),
+                        DateEnvoi: Blank(),
+                        RapportHTML: "",
+                        RapportCSV: "",
+                        NbReponses: CountRows(Filter(colReponsesLocales, EtatSynchro <> "SYNCHRONISEE")),
+                        NbPhotos: CountRows(Filter(colPhotosLocales, EtatSynchro = "EN_ATTENTE")),
+                        PhotosEnvoyees: 0,
+                        Essais: 0,
+                        Message: ""
+                    }
+                );
+                IfError(SaveData(colFile, "luwa_file"); true, false)
+            );
+            Clear(colReponsesLocales);
+            Clear(colPhotosLocales);
+            IfError(SaveData(colReponsesLocales, "luwa_reponses"); true, false);
+            IfError(SaveData(colPhotosLocales, "luwa_photos"); true, false)
+        );
+        UpdateContext({locRecupDisponible: false});
+        // Mes inspections en cours : chargées à l'affichage (la section n'apparaît que s'il y en a)
+        If(
+            Connection.Connected,
+            // 1. SharePoint (délégué, colonne indexée) : inspections en brouillon ou en cours, tous utilisateurs (max. 2000)
+            ClearCollect(colEnCoursTous, Filter(INSPECTIONS, StatutInspection.Value = "BROUILLON" || StatutInspection.Value = "EN_COURS"));
+            // 2. Application : celles de l'utilisateur connecté (comparaison insensible à la casse)
+            ClearCollect(
+                colInspectionsAReprendre,
+                Sort(Filter(colEnCoursTous, Lower(Inspecteur.Email) = Lower(User().Email)), DateDerniereModification, SortOrder.Descending)
+            )
+        );
+        // Envoi de la file dès l'arrivée sur l'accueil
+        Select(btnHomeEnvoyer)
+    Children:
+      - lblHomeTitre:
+          Control: Label@2.5.1
+          Properties:
+            Text: ="Inspections préventives"
+            X: =40
+            Y: =24
+            Width: =900
+            Height: =56
+            Size: =26
+            FontWeight: =FontWeight.Semibold
+      - lblHomeUtilisateur:
+          Control: Label@2.5.1
+          Properties:
+            Text: =gblUtilisateur.NomAffiche
+            Color: =RGBA(96, 94, 92, 1)
+            Align: =Align.Right
+            X: =600
+            Y: =24
+            Width: =480
+            Height: =56
+      - btnHomeFile:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Text: |-
+              =With(
+                  {n: CountRows(Filter(colFile, Etat <> "ENVOYEE"))},
+                  If(n = 0, "✓  Tout est envoyé", "⇅  " & n & " à envoyer")
+              )
+            Size: =13
+            FontWeight: =FontWeight.Semibold
+            Fill: =If(CountRows(Filter(colFile, Etat <> "ENVOYEE")) = 0, RGBA(240, 242, 245, 1), RGBA(255, 244, 222, 1))
+            Color: =If(CountRows(Filter(colFile, Etat <> "ENVOYEE")) = 0, RGBA(96, 94, 92, 1), RGBA(176, 96, 0, 1))
+            HoverFill: =RGBA(230, 241, 251, 1)
+            HoverColor: =RGBA(15, 108, 189, 1)
+            BorderColor: =If(CountRows(Filter(colFile, Etat <> "ENVOYEE")) = 0, RGBA(200, 205, 212, 1), RGBA(202, 80, 16, 1))
+            BorderThickness: =1
+            RadiusTopLeft: =20
+            RadiusTopRight: =20
+            RadiusBottomLeft: =20
+            RadiusBottomRight: =20
+            X: =1096
+            Y: =30
+            Width: =230
+            Height: =44
+            OnSelect: =Navigate(Screen_Envois, ScreenTransition.None)
+      - lblHomeHorsLigne:
+          Control: Label@2.5.1
+          Properties:
+            Visible: =!Connection.Connected
+            Text: |-
+              ="⚠ Hors connexion : une inspection ne peut être commencée ou reprise qu'avec du réseau."
+            Color: =RGBA(176, 96, 0, 1)
+            Fill: =RGBA(255, 244, 222, 1)
+            PaddingLeft: =12
+            X: =40
+            Y: =84
+            Width: =1286
+            Height: =36
+      - lblHomeFilePleine:
+          Control: Label@2.5.1
+          Properties:
+            Visible: =CountRows(Filter(colFile, Etat <> "ENVOYEE")) >= 15
+            Text: |-
+              =If(
+                  CountRows(Filter(colFile, Etat <> "ENVOYEE")) >= 20,
+                  "⚠ 20 inspections attendent d'être envoyées : la tablette est pleine. Retrouvez du réseau pour les envoyer avant d'en commencer une autre.",
+                  "⚠ " & CountRows(Filter(colFile, Etat <> "ENVOYEE")) & " inspections attendent d'être envoyées (maximum 20). Retrouvez du réseau dès que possible."
+              )
+            Color: =RGBA(176, 96, 0, 1)
+            Fill: =RGBA(255, 244, 222, 1)
+            FontWeight: =FontWeight.Semibold
+            PaddingLeft: =12
+            X: =40
+            Y: =128
+            Width: =1286
+            Height: =64
+      - btnHomePoteau:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Text: ="Inspecter un poteau"
+            Size: =24
+            FontWeight: =FontWeight.Semibold
+            RadiusTopLeft: =12
+            RadiusTopRight: =12
+            RadiusBottomLeft: =12
+            RadiusBottomRight: =12
+            X: =40
+            Y: =If(CountRows(Filter(colFile, Etat <> "ENVOYEE")) >= 15, 214, 150)
+            Width: =628
+            Height: =160
+            DisplayMode: =If(CountRows(Filter(colFile, Etat <> "ENVOYEE")) >= 20, DisplayMode.Disabled, DisplayMode.Edit)
+            OnSelect: |-
+              =Set(gblTypeInspection, "POTEAU");
+              Set(gblNomOuvrage, "");
+              Set(gblInspectionGUID, "");
+              Set(gblInspectionID, "");
+              Set(gblInspection, Blank());
+              Clear(colHistoriqueOuvrage);
+              Navigate(Screen_Identification, ScreenTransition.None)
+      - btnHomeLuminaire:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Text: ="Inspecter un luminaire"
+            Size: =24
+            FontWeight: =FontWeight.Semibold
+            RadiusTopLeft: =12
+            RadiusTopRight: =12
+            RadiusBottomLeft: =12
+            RadiusBottomRight: =12
+            X: =698
+            Y: =btnHomePoteau.Y
+            Width: =628
+            Height: =160
+            DisplayMode: =If(CountRows(Filter(colFile, Etat <> "ENVOYEE")) >= 20, DisplayMode.Disabled, DisplayMode.Edit)
+            OnSelect: |-
+              =Set(gblTypeInspection, "LUMINAIRE");
+              Set(gblNomOuvrage, "");
+              Set(gblInspectionGUID, "");
+              Set(gblInspectionID, "");
+              Set(gblInspection, Blank());
+              Clear(colHistoriqueOuvrage);
+              Navigate(Screen_Identification, ScreenTransition.None)
+      - lblHomeRepriseTitre:
+          Control: Label@2.5.1
+          Properties:
+            Visible: =!IsEmpty(Filter(colInspectionsAReprendre, !(InspectionGUID in Filter(colFile, Soumise).InspectionGUID)))
+            Text: |-
+              ="Reprendre une de mes inspections en cours (" & CountRows(Filter(colInspectionsAReprendre, !(InspectionGUID in Filter(colFile, Soumise).InspectionGUID))) & ")"
+            Size: =16
+            FontWeight: =FontWeight.Semibold
+            X: =40
+            Y: =btnHomePoteau.Y + btnHomePoteau.Height + 30
+            Width: =1286
+            Height: =40
+      - galHomeReprise:
+          Control: Gallery@2.15.0
+          Variant: BrowseLayout_Vertical_TwoTextOneImageVariant_ver5.0
+          Properties:
+            Items: =Filter(colInspectionsAReprendre, !(InspectionGUID in Filter(colFile, Soumise).InspectionGUID))
+            Visible: =!IsEmpty(Filter(colInspectionsAReprendre, !(InspectionGUID in Filter(colFile, Soumise).InspectionGUID)))
+            X: =40
+            Y: =lblHomeRepriseTitre.Y + 44
+            Width: =1286
+            Height: =Min(3, CountRows(Filter(colInspectionsAReprendre, !(InspectionGUID in Filter(colFile, Soumise).InspectionGUID)))) * 80
+            TemplateSize: =80
+            TemplatePadding: =0
+            OnSelect: |-
+              =If(
+                  !IsBlank(LookUp(colFile, InspectionGUID = ThisItem.InspectionGUID)),
+                  // Brouillon gardé sur la tablette : ses données locales deviennent la copie de travail (et quittent la file)
+                  Set(gblInspectionGUID, LookUp(colFile, InspectionGUID = ThisItem.InspectionGUID).InspectionGUID);
+                  Set(gblInspectionID, LookUp(colFile, InspectionGUID = ThisItem.InspectionGUID).InspectionID);
+                  Set(gblTypeInspection, LookUp(colFile, InspectionGUID = ThisItem.InspectionGUID).TypeInspection);
+                  Set(gblNomOuvrage, LookUp(colFile, InspectionGUID = ThisItem.InspectionGUID).NomOuvrage);
+                  Set(gblInspection, IfError(LookUp(INSPECTIONS, InspectionGUID = LookUp(colFile, InspectionGUID = ThisItem.InspectionGUID).InspectionGUID), Blank()));
+                  ClearCollect(colReponsesLocales, Filter(colReponses, false));
+                  IfError(LoadData(colReponsesLocales, "luwa_rep_" & LookUp(colFile, InspectionGUID = ThisItem.InspectionGUID).InspectionGUID, true); true, false);
+                  ClearCollect(colPhotosLocales, Filter(colPhotos, false));
+                  IfError(LoadData(colPhotosLocales, "luwa_pho_" & LookUp(colFile, InspectionGUID = ThisItem.InspectionGUID).InspectionGUID, true); true, false);
+                  RemoveIf(colFile, InspectionGUID = gblInspectionGUID);
+                  IfError(SaveData(colFile, "luwa_file"); true, false);
+                  Set(gblRepriseLocale, true);
+                  Navigate(Screen_Inspection, ScreenTransition.None),
+                  !Connection.Connected,
+                  Notify("Hors connexion : la reprise d'une inspection nécessite le réseau.", NotificationType.Warning),
+                  Set(gblInspection, ThisItem);
+                  Set(gblInspectionGUID, ThisItem.InspectionGUID);
+                  Set(gblInspectionID, ThisItem.InspectionID);
+                  Set(gblTypeInspection, ThisItem.TypeInspection.Value);
+                  Set(gblNomOuvrage, ThisItem.NomOuvrage);
+                  Set(gblRepriseLocale, false);
+                  Navigate(Screen_Inspection, ScreenTransition.None)
+              )
+          Children:
+            - btnRepriseCarte:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  Text: =""
+                  X: =0
+                  Y: =4
+                  Width: =Parent.TemplateWidth
+                  Height: =Parent.TemplateHeight - 8
+                  Fill: =RGBA(255, 255, 255, 1)
+                  HoverFill: =RGBA(230, 241, 251, 1)
+                  PressedFill: =RGBA(205, 226, 247, 1)
+                  BorderColor: =RGBA(200, 205, 212, 1)
+                  HoverBorderColor: =RGBA(15, 108, 189, 1)
+                  PressedBorderColor: =RGBA(15, 108, 189, 1)
+                  BorderThickness: =1
+                  RadiusTopLeft: =8
+                  RadiusTopRight: =8
+                  RadiusBottomLeft: =8
+                  RadiusBottomRight: =8
+                  OnSelect: =Select(Parent)
+            - lblRepriseLigne1:
+                Control: Label@2.5.1
+                Properties:
+                  OnSelect: =Select(Parent)
+                  Text: =ThisItem.NomOuvrage
+                  Size: =16
+                  FontWeight: =FontWeight.Semibold
+                  X: =20
+                  Y: =10
+                  Width: =Parent.TemplateWidth - 420
+                  Height: =32
+            - lblRepriseLigne2:
+                Control: Label@2.5.1
+                Properties:
+                  OnSelect: =Select(Parent)
+                  Text: |-
+                    =If(ThisItem.TypeInspection.Value = "LUMINAIRE", "Luminaire", "Poteau")
+                    & "  ·  modifiée le " & Text(ThisItem.DateDerniereModification, "dd/mm/yyyy à hh:mm")
+                  Size: =12
+                  Color: =RGBA(96, 94, 92, 1)
+                  X: =20
+                  Y: =42
+                  Width: =Parent.TemplateWidth - 420
+                  Height: =28
+            - btnRepriseOuvrir:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  Text: ="Reprendre  ›"
+                  Size: =14
+                  Fill: =RGBA(230, 241, 251, 1)
+                  Color: =RGBA(15, 108, 189, 1)
+                  HoverFill: =RGBA(205, 226, 247, 1)
+                  HoverColor: =RGBA(15, 108, 189, 1)
+                  BorderColor: =RGBA(15, 108, 189, 1)
+                  BorderThickness: =1
+                  RadiusTopLeft: =20
+                  RadiusTopRight: =20
+                  RadiusBottomLeft: =20
+                  RadiusBottomRight: =20
+                  X: =Parent.TemplateWidth - 380
+                  Y: =18
+                  Width: =200
+                  Height: =44
+                  OnSelect: =Select(Parent)
+            - btnRepriseAbandonner:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  Text: ="Abandonner"
+                  Size: =12
+                  Underline: =true
+                  Fill: =RGBA(0, 0, 0, 0)
+                  Color: =RGBA(120, 120, 120, 1)
+                  HoverFill: =RGBA(0, 0, 0, 0)
+                  HoverColor: =RGBA(196, 43, 28, 1)
+                  PressedFill: =RGBA(0, 0, 0, 0)
+                  BorderThickness: =0
+                  X: =Parent.TemplateWidth - 160
+                  Y: =18
+                  Width: =140
+                  Height: =44
+                  OnSelect: |-
+                    =UpdateContext({locInspectionAAbandonner: ThisItem})
+      - btnHomeHistorique:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Text: ="Consulter l'historique  ›"
+            Size: =14
+            Underline: =true
+            Align: =Align.Right
+            Fill: =RGBA(0, 0, 0, 0)
+            Color: =RGBA(15, 108, 189, 1)
+            HoverFill: =RGBA(0, 0, 0, 0)
+            HoverColor: =RGBA(12, 90, 160, 1)
+            PressedFill: =RGBA(0, 0, 0, 0)
+            BorderThickness: =0
+            X: =1026
+            Y: =700
+            Width: =300
+            Height: =44
+            OnSelect: |-
+              =Set(gblInspectionConsultee, Blank());
+              Set(gblEcranRetourHistorique, Screen_Home);
+              Navigate(Screen_History, ScreenTransition.None)
+      - btnHomeEnvoyer:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Visible: =false
+            Text: ="(technique) envoi"
+            X: =0
+            Y: =0
+            Width: =10
+            Height: =10
+            OnSelect: |-
+              =// Envoi d'UNE inspection de la file (colFile) vers SharePoint ; relancé par le minuteur tant qu'il reste des envois
+              If(
+                  Connection.Connected && !gblEnvoiEnCours && !IsEmpty(Filter(colFile, Etat <> "ENVOYEE")),
+                  Set(gblEnvoiEnCours, true);
+                  Set(gblEnvErreur, "");
+                  Set(gblEnvCourant, First(Sort(Filter(colFile, Etat <> "ENVOYEE"), DateAjout)));
+                  Patch(colFile, LookUp(colFile, InspectionGUID = gblEnvCourant.InspectionGUID), {Etat: "ENVOI", Message: ""});
+                  // Données de l'inspection, gardées sur la tablette (une entrée par inspection)
+                  ClearCollect(colEnvRep, Filter(colReponses, false));
+                  IfError(LoadData(colEnvRep, "luwa_rep_" & gblEnvCourant.InspectionGUID, true); true, false);
+                  ClearCollect(colEnvPho, Filter(colPhotos, false));
+                  IfError(LoadData(colEnvPho, "luwa_pho_" & gblEnvCourant.InspectionGUID, true); true, false);
+                  // 1. Fiche d'inspection (créée si elle n'existe pas encore dans SharePoint : inspection commencée hors ligne)
+                  IfError(
+                      If(
+                          IsBlank(LookUp(INSPECTIONS, InspectionGUID = gblEnvCourant.InspectionGUID)),
+                          Patch(
+                              INSPECTIONS,
+                              Defaults(INSPECTIONS),
+                              {
+                                  Title: gblEnvCourant.InspectionID,
+                                  InspectionID: gblEnvCourant.InspectionID,
+                                  InspectionGUID: gblEnvCourant.InspectionGUID,
+                                  TypeInspection: {Value: gblEnvCourant.TypeInspection},
+                                  NomOuvrage: gblEnvCourant.NomOuvrage,
+                                  CleOuvrage: Substitute(Upper(gblEnvCourant.NomOuvrage), " ", ""),
+                                  Inspecteur: nfPersonneCourante,
+                                  DateCreation: gblEnvCourant.DateCreation,
+                                  DateDerniereModification: Now(),
+                                  StatutInspection: {Value: "BROUILLON"},
+                                  StatutTraitement: {Value: "NON_ANALYSE"}
+                              }
+                          )
+                      );
+                      true,
+                      Set(gblEnvErreur, "Fiche : " & FirstError.Message);
+                      false
+                  );
+                  // 2. Photos (une par une ; une photo en échec reste à envoyer)
+                  If(
+                      gblEnvErreur = "",
+                      ClearCollect(colEnvPhoAEnvoyer, Filter(colEnvPho, EtatSynchro = "EN_ATTENTE"));
+                      ForAll(
+                          colEnvPhoAEnvoyer As wP,
+                          IfError(
+                              LUWA_EnvoyerPhoto.Run(
+                                  gblEnvCourant.InspectionGUID,
+                                  wP.QuestionCode,
+                                  gblEnvCourant.NomOuvrage,
+                                  wP.NomFichier,
+                                  Text(DateAdd(wP.DatePhoto, TimeZoneOffset(wP.DatePhoto), TimeUnit.Minutes), "yyyy-mm-ddThh:mm:ssZ"),
+                                  "COMPRESSEE",
+                                  wP.Source,
+                                  User().Email
+                              );
+                              Patch(colEnvPho, LookUp(colEnvPho, PhotoLocaleID = wP.PhotoLocaleID), {EtatSynchro: "ENVOYEE"});
+                              true,
+                              false
+                          )
+                      );
+                      IfError(SaveData(colEnvPho, "luwa_pho_" & gblEnvCourant.InspectionGUID); true, false);
+                      Patch(
+                          colFile,
+                          LookUp(colFile, InspectionGUID = gblEnvCourant.InspectionGUID),
+                          {PhotosEnvoyees: CountRows(Filter(colEnvPho, EtatSynchro = "ENVOYEE"))}
+                      );
+                      If(
+                          !IsEmpty(Filter(colEnvPho, EtatSynchro = "EN_ATTENTE")),
+                          Set(gblEnvErreur, CountRows(Filter(colEnvPho, EtatSynchro = "EN_ATTENTE")) & " photo(s) non envoyée(s)")
+                      )
+                  );
+                  // 3. Réponses : créations (sauf celles déjà présentes après un envoi interrompu) puis modifications
+                  If(
+                      gblEnvErreur = "",
+                      IfError(
+                          ClearCollect(colEnvDejaLa, Filter(REPONSES, InspectionGUID = gblEnvCourant.InspectionGUID));
+                          If(
+                              !IsEmpty(Filter(colEnvRep, EtatSynchro = "NOUVELLE" && !(ReponseID in colEnvDejaLa.ReponseID))),
+                              Patch(
+                                  REPONSES,
+                                  ForAll(
+                                      Filter(colEnvRep, EtatSynchro = "NOUVELLE" && !(ReponseID in colEnvDejaLa.ReponseID)) As wR,
+                                      {
+                                          Title: wR.ReponseID,
+                                          ReponseID: wR.ReponseID,
+                                          InspectionGUID: gblEnvCourant.InspectionGUID,
+                                          QuestionCode: wR.QuestionCode,
+                                          Valeur: wR.Valeur,
+                                          ValeurNumerique: wR.ValeurNumerique,
+                                          Commentaire: wR.Commentaire,
+                                          DateEncodage: Now(),
+                                          UtilisateurEncodage: nfPersonneCourante
+                                      }
+                                  )
+                              )
+                          );
+                          If(
+                              !IsEmpty(Filter(colEnvRep, EtatSynchro = "MODIFIEE" && ReponseID in colEnvDejaLa.ReponseID)),
+                              Patch(
+                                  REPONSES,
+                                  ForAll(
+                                      Filter(colEnvRep, EtatSynchro = "MODIFIEE" && ReponseID in colEnvDejaLa.ReponseID) As wR,
+                                      {
+                                          ID: LookUp(colEnvDejaLa, ReponseID = wR.ReponseID).ID,
+                                          Valeur: wR.Valeur,
+                                          ValeurNumerique: wR.ValeurNumerique,
+                                          Commentaire: wR.Commentaire,
+                                          DateEncodage: Now()
+                                      }
+                                  )
+                              )
+                          );
+                          UpdateIf(colEnvRep, EtatSynchro <> "SYNCHRONISEE", {EtatSynchro: "SYNCHRONISEE"});
+                          IfError(SaveData(colEnvRep, "luwa_rep_" & gblEnvCourant.InspectionGUID); true, false);
+                          true,
+                          Set(gblEnvErreur, "Réponses : " & FirstError.Message);
+                          false
+                      )
+                  );
+                  // 4. Statut : soumission (TERMINE, déclenche le rangement PAU-07) ou brouillon (EN_COURS)
+                  If(
+                      gblEnvErreur = "",
+                      IfError(
+                          Patch(
+                              INSPECTIONS,
+                              LookUp(INSPECTIONS, InspectionGUID = gblEnvCourant.InspectionGUID),
+                              {
+                                  StatutInspection: {Value: If(gblEnvCourant.Soumise, "TERMINE", "EN_COURS")},
+                                  DateSoumission: If(gblEnvCourant.Soumise, gblEnvCourant.DateSoumission, Blank()),
+                                  DateDerniereModification: Now(),
+                                  RapportHTML: If(gblEnvCourant.Soumise, gblEnvCourant.RapportHTML, Blank()),
+                                  RapportCSV: If(gblEnvCourant.Soumise, gblEnvCourant.RapportCSV, Blank())
+                              }
+                          );
+                          true,
+                          Set(gblEnvErreur, "Statut : " & FirstError.Message);
+                          false
+                      )
+                  );
+                  // 5. Résultat
+                  If(
+                      gblEnvErreur = "",
+                      Clear(colEnvRep);
+                      Clear(colEnvPho);
+                      IfError(SaveData(colEnvRep, "luwa_rep_" & gblEnvCourant.InspectionGUID); true, false);
+                      IfError(SaveData(colEnvPho, "luwa_pho_" & gblEnvCourant.InspectionGUID); true, false);
+                      Patch(colFile, LookUp(colFile, InspectionGUID = gblEnvCourant.InspectionGUID), {Etat: "ENVOYEE", DateEnvoi: Now(), Message: ""}),
+                      Patch(
+                          colFile,
+                          LookUp(colFile, InspectionGUID = gblEnvCourant.InspectionGUID),
+                          {Etat: "ERREUR", Message: gblEnvErreur, Essais: gblEnvCourant.Essais + 1}
+                      )
+                  );
+                  IfError(SaveData(colFile, "luwa_file"); true, false);
+                  Set(gblEnvoiEnCours, false)
+              )
+      - tmrHomeEnvoi:
+          Control: Timer
+          Properties:
+            Duration: =If(Connection.Connected && CountRows(Filter(colFile, Etat <> "ENVOYEE")) > 0, 3000, 20000)
+            Repeat: =true
+            AutoStart: =true
+            Visible: =false
+            OnTimerEnd: =Select(btnHomeEnvoyer)
+      - rectHomeVoile:
+          Control: Rectangle@2.3.0
+          Properties:
+            Visible: =!IsBlank(locInspectionAAbandonner)
+            Fill: =RGBA(0, 0, 0, 0.4)
+            X: =0
+            Y: =0
+            Width: =Parent.Width
+            Height: =Parent.Height
+      - conHomeAbandon:
+          Control: GroupContainer@1.3.0
+          Variant: ManualLayout
+          Properties:
+            Visible: =!IsBlank(locInspectionAAbandonner)
+            Fill: =RGBA(255, 255, 255, 1)
+            X: =383
+            Y: =234
+            Width: =600
+            Height: =300
+          Children:
+            - lblAbandonTexte:
+                Control: Label@2.5.1
+                Properties:
+                  Text: |-
+                    ="Abandonner l'inspection " & locInspectionAAbandonner.NomOuvrage
+                    & " (" & If(locInspectionAAbandonner.TypeInspection.Value = "LUMINAIRE", "luminaire", "poteau") & ") ?"
+                    & Char(10) & "Elle ne sera ni supprimée ni modifiable : elle disparaît de la reprise"
+                    & " et ne déclenche plus l'avertissement de concurrence."
+                  X: =30
+                  Y: =20
+                  Width: =540
+                  Height: =160
+            - btnAbandonConfirmer:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  Text: ="Confirmer l'abandon"
+                  X: =30
+                  Y: =210
+                  Width: =260
+                  Height: =60
+                  DisplayMode: =If(locOperationEnCours, DisplayMode.Disabled, DisplayMode.Edit)
+                  OnSelect: |-
+                    =UpdateContext({locOperationEnCours: true});
+                    IfError(
+                        Patch(
+                            INSPECTIONS,
+                            LookUp(INSPECTIONS, InspectionGUID = locInspectionAAbandonner.InspectionGUID),
+                            {StatutInspection: {Value: "ABANDONNE"}, DateDerniereModification: Now()}
+                        );
+                        Notify("Inspection abandonnée.", NotificationType.Success),
+                        Notify("Abandon impossible : " & FirstError.Message, NotificationType.Error)
+                    );
+                    // 1. SharePoint (délégué, colonne indexée) : inspections en brouillon ou en cours, tous utilisateurs (max. 2000)
+                    ClearCollect(colEnCoursTous, Filter(INSPECTIONS, StatutInspection.Value = "BROUILLON" || StatutInspection.Value = "EN_COURS"));
+                    // 2. Application : celles de l'utilisateur connecté (comparaison insensible à la casse)
+                    ClearCollect(
+                        colInspectionsAReprendre,
+                        Sort(Filter(colEnCoursTous, Lower(Inspecteur.Email) = Lower(User().Email)), DateDerniereModification, SortOrder.Descending)
+                    );
+                    UpdateContext({locInspectionAAbandonner: Blank(), locOperationEnCours: false})
+            - btnAbandonAnnuler:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  Text: ="Annuler"
+                  X: =320
+                  Y: =210
+                  Width: =200
+                  Height: =60
+                  OnSelect: |-
+                    =UpdateContext({locInspectionAAbandonner: Blank()})
