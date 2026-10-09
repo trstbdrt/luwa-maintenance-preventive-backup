@@ -235,3 +235,32 @@ Sur l'écran d'identification, pour un même ouvrage et un même type d'inspecti
 
 - La liste « Reprendre inspection » de l'accueil filtre sur l'utilisateur connecté sans tenir compte de la casse des adresses e-mail.
 
+
+---
+
+# DEC-29 — Clé d'ouvrage et dossiers par ouvrage
+
+## Décision
+
+- **Clé d'ouvrage** : `CleOuvrage` = nom en majuscules, sans aucun espace, caractères interdits par SharePoint retirés
+  (`e100 511`, `E100511`, `E100  511` → `E100511` ; `E100 511 - 1` → `E100511-1`). Toutes les recherches de l'application
+  (identification, inspection en cours, dernière inspection, poteau parent, historique) comparent cette clé.
+- **Orthographe affichée unique** : si la clé existe déjà, l'application reprend le `NomOuvrage` déjà enregistré ;
+  sinon elle applique le format `E100 511` (lettres + 3 chiffres, espace, chiffres) ; à défaut, la saisie nettoyée.
+- **Dossiers par ouvrage** : à la soumission (TERMINE) ou à la déclaration d'inaccessibilité, le flux PAU-07 range
+  l'inspection dans `PHOTOS_INSPECTIONS/<poteau>/<date type identifiant>/` ; le luminaire `E100 511-1` est rangé dans le
+  dossier du poteau : `PHOTOS_INSPECTIONS/E100 511/E100 511-1/…`. Le dossier contient le rapport PDF, les réponses CSV et les photos.
+- Les photos d'une inspection non soumise restent dans `PHOTOS_INSPECTIONS/_EN_COURS/<InspectionGUID>/` (remplace DEC-15 pour
+  les inspections en cours) ; elles sont **déplacées** (pas copiées) à la soumission.
+- **Rapport** : PDF pour la lecture (consultable dans SharePoint, imprimable, non modifiable) + CSV (`;`, UTF-8 avec BOM)
+  pour l'exploitation. Le contenu est généré par l'application (colonnes `RapportHTML`, `RapportCSV`), le flux ne fait que
+  créer les fichiers.
+
+## Conséquences
+
+- Aucun ralentissement sur le terrain : le rangement est fait côté serveur après la soumission ; la tablette n'attend pas le flux.
+- Les listes INSPECTIONS / REPONSES restent la source de vérité (application, export) ; les dossiers sont une couche de consultation.
+- L'application retrouve les photos par `InspectionGUID` (métadonnée conservée par le déplacement), quel que soit le dossier.
+- Deux ouvrages ne différant que par un espace seraient confondus : exclu par la convention de nommage `E100 511`.
+- Le dossier porte l'identifiant connu à la soumission (TMP-… tant que PAU-04 n'existe pas).
+- Les photos d'une inaccessibilité (SYS_001, lot suivant) devront être envoyées avant le passage au statut INACCESSIBLE.

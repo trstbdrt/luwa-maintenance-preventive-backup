@@ -1,0 +1,247 @@
+Screens:
+  Screen_Resume:
+    Properties:
+      Fill: =RGBA(245, 247, 250, 1)
+      OnVisible: |-
+        =// Récapitulatif : questions affichées avec réponse (libellé), commentaire et nombre de photos
+        ClearCollect(
+            colRecap,
+            ForAll(
+                Sort(Filter(colEtatComplet, Visible), OrdreAffichage) As wE,
+                With(
+                    {wR: LookUp(colReponses, QuestionCode = wE.QuestionCode), wN: CountRows(Filter(colPhotos, QuestionCode = wE.QuestionCode))},
+                    {
+                        Ordre: wE.OrdreAffichage,
+                        QuestionCode: wE.QuestionCode,
+                        Libelle: wE.Libelle,
+                        Groupe: wE.DisplayGroup,
+                        Reponse: Switch(
+                            wE.TypeQuestion,
+                            "PHOTO", wN & " photo(s)",
+                            "NUMERIQUE", If(IsBlank(wR.ValeurNumerique), "—", Text(wR.ValeurNumerique)),
+                            "CALCUL", If(IsBlank(wR.ValeurNumerique), "—", Text(Round(wR.ValeurNumerique, 1)) & " %"),
+                            "TEXTE", Coalesce(wR.Valeur, "—"),
+                            If(
+                                IsBlank(wR.Valeur),
+                                "—",
+                                With(
+                                    {
+                                        wCodes: Split(wE.ValeursPossibles, "|"),
+                                        wLibs: Split(Coalesce(wE.LibellesValeurs, wE.ValeursPossibles), "|")
+                                    },
+                                    With(
+                                        {wPos: First(Filter(Sequence(CountRows(wCodes)), Index(wCodes, Value).Value = wR.Valeur)).Value},
+                                        If(IsBlank(wPos), wR.Valeur, Index(wLibs, wPos).Value)
+                                    )
+                                )
+                            )
+                        ),
+                        Commentaire: wR.Commentaire,
+                        Photos: If(wE.TypeQuestion = "PHOTO" || wN = 0, "", wN & " photo(s)")
+                    }
+                )
+            )
+        );
+        UpdateContext({locSoumissionEnCours: false})
+    Children:
+      - lblResTitre:
+          Control: Label@2.5.1
+          Properties:
+            Text: ="Récapitulatif — " & gblNomOuvrage
+            X: =40
+            Y: =16
+            Width: =1000
+            Height: =50
+            Size: =22
+            FontWeight: =FontWeight.Semibold
+      - lblResSynthese:
+          Control: Label@2.5.1
+          Properties:
+            Text: |-
+              =gblTypeInspection & "  ·  " & CountRows(colRecap) & " questions  ·  " & CountRows(colPhotos) & " photo(s)"
+              & "  ·  touchez une ligne pour modifier"
+            X: =40
+            Y: =66
+            Width: =1286
+            Height: =32
+      - galResRecap:
+          Control: Gallery@2.15.0
+          Variant: BrowseLayout_Vertical_TwoTextOneImageVariant_ver5.0
+          Properties:
+            Items: =colRecap
+            X: =40
+            Y: =104
+            Width: =1286
+            Height: =570
+            TemplateSize: =62
+            OnSelect: |-
+              =Set(gblQuestionCible, ThisItem.QuestionCode);
+              Navigate(Screen_Inspection, ScreenTransition.None)
+          Children:
+            - lblRecapLibelle:
+                Control: Label@2.5.1
+                Properties:
+                  OnSelect: =Select(Parent)
+                  Text: =ThisItem.Libelle
+                  FontWeight: =FontWeight.Semibold
+                  X: =16
+                  Y: =4
+                  Width: =Parent.TemplateWidth * 0.5
+                  Height: =28
+            - lblRecapReponse:
+                Control: Label@2.5.1
+                Properties:
+                  OnSelect: =Select(Parent)
+                  Text: =ThisItem.Reponse & If(IsBlank(ThisItem.Photos), "", "  ·  " & ThisItem.Photos)
+                  X: =Parent.TemplateWidth * 0.5 + 16
+                  Y: =4
+                  Width: =Parent.TemplateWidth * 0.5 - 80
+                  Height: =28
+            - lblRecapCommentaire:
+                Control: Label@2.5.1
+                Properties:
+                  OnSelect: =Select(Parent)
+                  Visible: =!IsBlank(ThisItem.Commentaire)
+                  Text: ="💬 " & ThisItem.Commentaire
+                  Size: =11
+                  Italic: =true
+                  Color: =RGBA(96, 94, 92, 1)
+                  X: =16
+                  Y: =32
+                  Width: =Parent.TemplateWidth - 80
+                  Height: =24
+            - icoRecapModifier:
+                Control: Classic/Icon@2.5.0
+                Properties:
+                  Icon: =Icon.Edit
+                  Color: =RGBA(15, 108, 189, 1)
+                  X: =Parent.TemplateWidth - 48
+                  Y: =15
+                  Width: =32
+                  Height: =32
+                  OnSelect: =Select(Parent)
+            - rectRecapSeparateur:
+                Control: Rectangle@2.3.0
+                Properties:
+                  Fill: =RGBA(225, 228, 232, 1)
+                  X: =0
+                  Y: =Parent.TemplateHeight - 1
+                  Width: =Parent.TemplateWidth
+                  Height: =1
+      - lblResRapportHTML:
+          Control: Label@2.5.1
+          Properties:
+            Visible: =false
+            Text: |-
+              =// Rapport de l'inspection (PDF généré par le flux PAU-07) ; {{DATE}} remplacé à la soumission
+              "<!DOCTYPE html><html><head><meta charset=""utf-8""><title>Inspection " & Substitute(Substitute(Substitute(gblNomOuvrage, "&", "&amp;"), "<", "&lt;"), ">", "&gt;") & "</title><style>body{font-family:Segoe UI,Arial,sans-serif;font-size:11pt;color:#222;margin:24px}h1{font-size:18pt;margin:0 0 8px}table{border-collapse:collapse;width:100%;margin-top:14px}th,td{border:1px solid #c8c8c8;padding:5px 7px;text-align:left;vertical-align:top}th{background:#e1e8f2}tr.g td{background:#f0f3f7;font-weight:bold}table.info{width:auto}table.info td{border:none;padding:2px 16px 2px 0}</style></head><body>"
+              & "<h1>Inspection " & Lower(gblTypeInspection) & " — " & Substitute(Substitute(Substitute(gblNomOuvrage, "&", "&amp;"), "<", "&lt;"), ">", "&gt;") & "</h1>"
+              & "<table class=""info""><tr><td>Statut</td><td><b>Terminée</b></td></tr>"
+              & "<tr><td>Inspecteur</td><td>" & Substitute(Substitute(Substitute(Coalesce(gblInspection.Inspecteur.DisplayName, User().FullName), "&", "&amp;"), "<", "&lt;"), ">", "&gt;") & "</td></tr>"
+              & "<tr><td>Commencée le</td><td>" & Text(gblInspection.DateCreation, "dd/mm/yyyy hh:mm") & "</td></tr>"
+              & "<tr><td>Soumise le</td><td>{{DATE}}</td></tr>"
+              & "<tr><td>Identifiant</td><td>" & gblInspectionID & "</td></tr>"
+              & "<tr><td>Photos</td><td>" & CountRows(colPhotos) & " (dans ce dossier, nommées par code de question)</td></tr></table>"
+              & "<table><tr><th>Question</th><th>Réponse</th><th>Commentaire</th><th>Photos</th></tr>"
+              & Concat(
+                  ForAll(
+                      Sequence(CountRows(colRecap)) As wI,
+                      With(
+                          {wR: Index(colRecap, wI.Value), wN: CountRows(Filter(colPhotos, QuestionCode = Index(colRecap, wI.Value).QuestionCode))},
+                          {
+                              L: If(
+                                  wI.Value = 1 || Index(colRecap, wI.Value - 1).Groupe <> wR.Groupe,
+                                  "<tr class=""g""><td colspan=""4"">"
+                                  & Switch(wR.Groupe, "GENERAL", "Général", "CORROSION", "Corrosion", "SUR_PONT", "Sur pont", wR.Groupe)
+                                  & "</td></tr>",
+                                  ""
+                              )
+                              & "<tr><td>" & Substitute(Substitute(Substitute(wR.Libelle, "&", "&amp;"), "<", "&lt;"), ">", "&gt;") & "</td><td>" & Substitute(Substitute(Substitute(wR.Reponse, "&", "&amp;"), "<", "&lt;"), ">", "&gt;")
+                              & "</td><td>" & Substitute(Substitute(Substitute(Coalesce(wR.Commentaire, ""), "&", "&amp;"), "<", "&lt;"), ">", "&gt;") & "</td><td>" & If(wN = 0, "", Text(wN)) & "</td></tr>"
+                          }
+                      )
+                  ),
+                  L
+              )
+              & "</table></body></html>"
+            X: =40
+            Y: =760
+            Width: =10
+            Height: =10
+      - lblResRapportCSV:
+          Control: Label@2.5.1
+          Properties:
+            Visible: =false
+            Text: |-
+              =// Réponses au format CSV (séparateur « ; ») : codes et libellés
+              "InspectionID;Ouvrage;Type;Ordre;Groupe;QuestionCode;Question;ValeurCode;Reponse;Commentaire;NbPhotos" & Char(13) & Char(10)
+              & Concat(
+                  colRecap As wR,
+                  With(
+                      {wRep: LookUp(colReponses, QuestionCode = wR.QuestionCode)},
+                      """" & Substitute(gblInspectionID, """", """""") & """" & ";" & """" & Substitute(gblNomOuvrage, """", """""") & """" & ";" & gblTypeInspection & ";" & wR.Ordre & ";"
+                      & wR.Groupe & ";" & wR.QuestionCode & ";" & """" & Substitute(wR.Libelle, """", """""") & """" & ";"
+                      & """" & Substitute(Coalesce(wRep.Valeur, Text(wRep.ValeurNumerique), ""), """", """""") & """" & ";"
+                      & """" & Substitute(wR.Reponse, """", """""") & """" & ";" & """" & Substitute(Coalesce(wR.Commentaire, ""), """", """""") & """" & ";"
+                      & CountRows(Filter(colPhotos, QuestionCode = wR.QuestionCode))
+                  ),
+                  Char(13) & Char(10)
+              )
+            X: =60
+            Y: =760
+            Width: =10
+            Height: =10
+      - btnResRetour:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Text: ="Modifier le formulaire"
+            X: =40
+            Y: =690
+            Width: =280
+            Height: =56
+            OnSelect: |-
+              =Set(gblQuestionCible, "");
+              Navigate(Screen_Inspection, ScreenTransition.None)
+      - btnResSoumettre:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Text: ="Soumettre l'inspection"
+            X: =1046
+            Y: =690
+            Width: =280
+            Height: =56
+            DisplayMode: =If(gblResteObligatoires + gblResteCommentaires + gblRestePhotos = 0 && !gblSoumissionBloquee && !locSoumissionEnCours, DisplayMode.Edit, DisplayMode.Disabled)
+            OnSelect: |-
+              =If(
+                  !Connection.Connected,
+                  Notify("Hors connexion : la soumission nécessite le réseau.", NotificationType.Warning),
+                  !(gblResteObligatoires + gblResteCommentaires + gblRestePhotos = 0 && !gblSoumissionBloquee),
+                  Notify("Des éléments obligatoires manquent : revenez au formulaire.", NotificationType.Warning),
+                  !IsEmpty(Filter(colReponses, EtatSynchro <> "SYNCHRONISEE")) || !IsEmpty(Filter(colPhotos, EtatSynchro = "EN_ATTENTE")),
+                  Notify("Des éléments ne sont pas encore enregistrés : revenez au formulaire et enregistrez le brouillon.", NotificationType.Warning),
+                  UpdateContext({locSoumissionEnCours: true});
+                  IfError(
+                      Patch(
+                          INSPECTIONS,
+                          LookUp(INSPECTIONS, InspectionGUID = gblInspectionGUID),
+                          {
+                              StatutInspection: {Value: "TERMINE"},
+                              DateSoumission: Now(),
+                              DateDerniereModification: Now(),
+                              // Rapport (PDF) et réponses (CSV) déposés dans le dossier de l'ouvrage par le flux PAU-07
+                              RapportHTML: Substitute(lblResRapportHTML.Text, "{{DATE}}", Text(Now(), "dd/mm/yyyy hh:mm")),
+                              RapportCSV: lblResRapportCSV.Text
+                          }
+                      );
+                      // Copie locale vidée : l'inspection est soumise (DEC-25)
+                      Clear(colReponses);
+                      Clear(colPhotos);
+                      IfError(SaveData(colReponses, "luwa_reponses"); true, false);
+                      IfError(SaveData(colPhotos, "luwa_photos"); true, false);
+                      Set(gblQuestionCible, "");
+                      Notify("Inspection " & gblNomOuvrage & " soumise.", NotificationType.Success);
+                      Navigate(Screen_Home, ScreenTransition.None),
+                      Notify("Soumission impossible : " & FirstError.Message, NotificationType.Error)
+                  );
+                  UpdateContext({locSoumissionEnCours: false})
+              )

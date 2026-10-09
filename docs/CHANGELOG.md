@@ -1,5 +1,17 @@
 # Changelog
 
+## Lot 4 (Power Apps)
+
+Date : 2026-10-09
+
+Contenu :
+
+- DEC-29 : clé d'ouvrage `CleOuvrage` (espaces et casse ignorés), orthographe unique, format `E100 511`
+- SharePoint : colonnes INSPECTIONS CleOuvrage (indexée, remplie pour l'existant), CheminDossier, RapportHTML, RapportCSV ;
+  lien « Dossiers ouvrages » dans le menu ; vue REPONSES « Par inspection »
+- Application : identification et historique par clé ; rapport HTML + CSV produit à la soumission et à l'inaccessibilité
+- Flux : PAU-06 dépose dans `_EN_COURS/<GUID>` ; nouveau PAU-07 `LUWA_ClasserInspection` (dossier par ouvrage, PDF, CSV, photos déplacées)
+
 ## Version 0.2.0
 
 Date : 2026-10-09

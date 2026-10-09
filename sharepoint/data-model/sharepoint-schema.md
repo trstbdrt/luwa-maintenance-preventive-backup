@@ -45,6 +45,10 @@ Une ligne = une inspection.
 | GPSLatitude | Number | Non | Non |
 | GPSLongitude | Number | Non | Non |
 | InspectionPrecedenteGUID | Single line text | Non | Non |
+| CleOuvrage | Single line text | Non | Oui |
+| CheminDossier | Single line text | Non | Non |
+| RapportHTML | Multiple lines of text (texte brut) | Non | Non |
+| RapportCSV | Multiple lines of text (texte brut) | Non | Non |
 
 ## Règles de remplissage
 
@@ -57,6 +61,10 @@ Toutes les relations (REPONSES, PHOTOS_INSPECTIONS, InspectionPrecedenteGUID) ut
 InspectionID est un identifiant métier lisible, utilisé uniquement pour l'affichage. Pendant la saisie, il vaut `TMP-{8 premiers caractères du GUID}` (DEC-13). Sa valeur finale `INS-AAAAMMJJ-NNNNNN` est attribuée par Power Automate lors de la synchronisation SharePoint : AAAAMMJJ = DateCreation, NNNNNN = ID SharePoint de l'élément sur 6 chiffres (DEC-14). Aucune relation ne dépend de InspectionID (DEC-11).
 
 InspectionGUID est généré immédiatement à la création de l'inspection (DEC-11).
+
+CleOuvrage = NomOuvrage en majuscules sans aucun espace ; toutes les recherches d'ouvrage se font sur cette clé (DEC-29).
+RapportHTML et RapportCSV sont écrits par l'application à la soumission (TERMINE ou INACCESSIBLE) ; CheminDossier est
+rempli par le flux PAU-07 une fois les fichiers rangés dans `PHOTOS_INSPECTIONS/<ouvrage>/<inspection>/` (DEC-29).
 
 DateDerniereModification est mise à jour à chaque modification métier (réponse, commentaire, photo) ; une consultation ne la modifie jamais, le passage en ARCHIVE non plus. Elle est la date de référence de l'archivage : une inspection est archivable si et seulement si son statut est TERMINE ou INACCESSIBLE et Aujourd'hui - DateDerniereModification > 183 jours (DEC-12, DEC-16, DEC-17).
 
