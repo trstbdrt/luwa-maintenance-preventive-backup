@@ -3,7 +3,7 @@ Screens:
     Properties:
       Fill: =RGBA(245, 247, 250, 1)
       OnVisible: |-
-        =UpdateContext({locDepuisAccueil: IsBlank(gblInspectionConsultee), locRechercheOuvrage: ""});
+        =UpdateContext({locDepuisAccueil: IsBlank(gblInspectionConsultee), locRechercheOuvrage: "", locHistRechercheFaite: false, locHistTexte: ""});
         Clear(colHistorique);
         If(
             IsBlank(gblInspectionConsultee),
@@ -16,7 +16,7 @@ Screens:
       - lblHistTitre:
           Control: Label@2.5.1
           Properties:
-            Text: ="Historique (lecture seule)"
+            Text: ="Historique — tous les techniciens (lecture seule)"
             X: =40
             Y: =30
             Width: =800
@@ -45,11 +45,24 @@ Screens:
             DisplayMode: =If(IsBlank(Trim(txtHistRecherche.Text)), DisplayMode.Disabled, DisplayMode.Edit)
             OnSelect: |-
               =// DEC-29 : recherche par clé (majuscules, sans espaces)
-              UpdateContext({locRechercheOuvrage: Substitute(Upper(txtHistRecherche.Text), " ", "")});
+              UpdateContext({locRechercheOuvrage: Substitute(Upper(txtHistRecherche.Text), " ", ""), locHistTexte: Upper(Trim(txtHistRecherche.Text))});
               ClearCollect(
                   colHistorique,
                   Sort(Filter(INSPECTIONS, CleOuvrage = locRechercheOuvrage), DateCreation, SortOrder.Descending)
-              )
+              );
+              UpdateContext({locHistRechercheFaite: true})
+      - lblHistAucun:
+          Control: Label@2.5.1
+          Properties:
+            Visible: =locDepuisAccueil && locHistRechercheFaite && IsEmpty(colHistorique)
+            Text: ="Aucune inspection trouvée pour « " & locHistTexte & " »."
+            Size: =13
+            Italic: =true
+            Color: =RGBA(120, 120, 120, 1)
+            X: =40
+            Y: =160
+            Width: =440
+            Height: =60
       - galHistResultats:
           Control: Gallery@2.15.0
           Variant: BrowseLayout_Vertical_TwoTextOneImageVariant_ver5.0
