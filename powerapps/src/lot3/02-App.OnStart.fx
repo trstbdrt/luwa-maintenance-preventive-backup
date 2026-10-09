@@ -17,6 +17,7 @@ Set(gblResteObligatoires, 0);
 Set(gblResteCommentaires, 0);
 Set(gblRestePhotos, 0);
 Set(gblQuestionCible, "");
+Set(gblInspectionChargee, "");
 
 // --- Catalogues (lus une fois, choix convertis en texte) -----------------
 ClearCollect(

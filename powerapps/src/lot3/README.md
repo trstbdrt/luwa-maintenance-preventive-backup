@@ -70,3 +70,15 @@ Poteau `TEST 301`, luminaire `TEST 301-1`. Tablette avec l'application mobile Po
   extension `.png` (la caméra Power Apps produit du PNG).
 
 Étapes : supprimer **Screen_Inspection** et **Screen_Resume**, coller `06-Screen_Inspection.pa.yaml` et `09-Screen_Resume.pa.yaml`, Save, Publish.
+
+## Mise à jour 3.2 (retours de test 3.1)
+
+- **V5** : au retour du récapitulatif (« Modifier »), les réponses et photos en mémoire sont conservées (plus de rechargement
+  si c'est la même inspection, variable `gblInspectionChargee`) ; lors d'un vrai chargement, `Refresh` de REPONSES et
+  PHOTOS_INSPECTIONS avant lecture.
+- En-tête : le texte « Reste … » n'est plus cliquable ; un **bouton** « Aller à la prochaine question à compléter › » le remplace.
+- Panneau photos : **« Terminé »** grisé tant que le nombre minimum de photos de la question n'est pas atteint ;
+  bouton **« Plus tard »** pour fermer sans valider (la question reste à compléter).
+
+Étapes : App > OnStart (ajout `Set(gblInspectionChargee, "")`) puis Run OnStart ; supprimer **Screen_Inspection**,
+coller `06-Screen_Inspection.pa.yaml` ; Save, Publish.
