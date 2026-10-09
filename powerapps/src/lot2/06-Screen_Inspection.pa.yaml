@@ -460,8 +460,8 @@ Screens:
             Width: =10
             Height: =10
             OnSelect: |-
-              =// Moteur de règles — étape 2 : calculs (TD § 5.3)
-              // Format de formule pris en charge : ((A-B)/C)*100 avec A, B, C des codes de questions
+              =// Moteur de règles en une seule formule (TD § 5.3) — pas de Select entre boutons (cycle interdit par Power Apps)
+              // Étape 2 : calculs. Format pris en charge : ((A-B)/C)*100 avec A, B, C des codes de questions
               ForAll(
                   Filter(colQuestionsFormulaire, TypeQuestion = "CALCUL") As wQ,
                   With(
@@ -490,20 +490,8 @@ Screens:
                       )
                   )
               );
-              // Étape 3 : passes d'évaluation des règles (TD § 5.3, § 5.4)
-              UpdateContext({locPasse: 1});
-              Select(btnInspPasse)
-      - btnInspPasse:
-          Control: Classic/Button@2.2.0
-          Properties:
-            Visible: =false
-            Text: ="(technique) passe"
-            X: =0
-            Y: =0
-            Width: =10
-            Height: =10
-            OnSelect: |-
-              =// Conditions : une question source masquée ou non renseignée rend la condition fausse (TD § 5.4)
+              ClearCollect(colEtatQuestions, ForAll(colQuestionsFormulaire, {QuestionCode: QuestionCode, Visible: VisibleParDefaut}));
+              // Étape 3 — passe 1/3 : conditions (source masquée ou vide = fausse), puis visibilité
               ClearCollect(
                   colReglesEval,
                   AddColumns(
@@ -533,7 +521,6 @@ Screens:
                       )
                   )
               );
-              // Visibilité : AFFICHER, condition composée, MASQUER_FORMULAIRE
               With(
                   {
                       wMasque: !IsEmpty(Filter(colReglesEval, Vraie && Action = "MASQUER_FORMULAIRE")),
@@ -559,35 +546,148 @@ Screens:
                       )
                   )
               );
-              Select(btnInspPasseSuite)
-      - btnInspPasseSuite:
-          Control: Classic/Button@2.2.0
-          Properties:
-            Visible: =false
-            Text: ="(technique) passe suivante"
-            X: =0
-            Y: =0
-            Width: =10
-            Height: =10
-            OnSelect: |-
-              =// 4 passes : profondeur maximale des dépendances du catalogue v0.1 = 3, plus une passe de stabilisation
-              If(
-                  locPasse < 4,
-                  UpdateContext({locPasse: locPasse + 1});
-                  Select(btnInspPasse),
-                  Select(btnInspFinaliser)
-              )
-      - btnInspFinaliser:
-          Control: Classic/Button@2.2.0
-          Properties:
-            Visible: =false
-            Text: ="(technique) finaliser"
-            X: =0
-            Y: =0
-            Width: =10
-            Height: =10
-            OnSelect: |-
-              =// Étape 5 : état complet de chaque question ; une question masquée n'est ni obligatoire ni contrôlée
+              // Étape 3 — passe 2/3 : conditions (source masquée ou vide = fausse), puis visibilité
+              ClearCollect(
+                  colReglesEval,
+                  AddColumns(
+                      colReglesFormulaire,
+                      Vraie,
+                      With(
+                          {
+                              wVis: Coalesce(LookUp(colEtatQuestions, QuestionCode = QuestionSource).Visible, false),
+                              wRep: LookUp(colReponses, QuestionCode = QuestionSource)
+                          },
+                          Switch(
+                              ConditionType,
+                              "EQUALS",
+                              wVis && If(
+                                  !IsBlank(wRep.ValeurNumerique),
+                                  wRep.ValeurNumerique = Value(ConditionValeur),
+                                  !IsBlank(wRep.Valeur) && wRep.Valeur = ConditionValeur
+                              ),
+                              "GREATER_OR_EQUAL",
+                              wVis && !IsBlank(wRep.ValeurNumerique) && wRep.ValeurNumerique >= Value(ConditionValeur),
+                              "LESS_THAN",
+                              wVis && !IsBlank(wRep.ValeurNumerique) && wRep.ValeurNumerique < Value(ConditionValeur),
+                              "VISIBLE",
+                              wVis = (Upper(ConditionValeur) = "TRUE"),
+                              false
+                          )
+                      )
+                  )
+              );
+              With(
+                  {
+                      wMasque: !IsEmpty(Filter(colReglesEval, Vraie && Action = "MASQUER_FORMULAIRE")),
+                      wSourceMasque: LookUp(colReglesEval, Vraie && Action = "MASQUER_FORMULAIRE").QuestionSource
+                  },
+                  ClearCollect(
+                      colEtatQuestions,
+                      ForAll(
+                          colQuestionsFormulaire As wQ,
+                          {
+                              QuestionCode: wQ.QuestionCode,
+                              Visible: If(
+                                  wMasque && wQ.QuestionCode <> wSourceMasque,
+                                  false,
+                                  wQ.VisibleParDefaut
+                                      || !IsEmpty(Filter(colReglesEval, Vraie && Action = "AFFICHER" && QuestionCible = wQ.QuestionCode))
+                                      || (
+                                          !IsEmpty(Filter(colReglesEval, Vraie && Action = "AFFICHER_IF_MATCH" && QuestionCible = wQ.QuestionCode))
+                                          && !IsEmpty(Filter(colReglesEval, Vraie && Action = "WAITING_SECOND_CONDITION" && QuestionCible = wQ.QuestionCode))
+                                      )
+                              )
+                          }
+                      )
+                  )
+              );
+              // Étape 3 — passe 3/3 : conditions (source masquée ou vide = fausse), puis visibilité
+              ClearCollect(
+                  colReglesEval,
+                  AddColumns(
+                      colReglesFormulaire,
+                      Vraie,
+                      With(
+                          {
+                              wVis: Coalesce(LookUp(colEtatQuestions, QuestionCode = QuestionSource).Visible, false),
+                              wRep: LookUp(colReponses, QuestionCode = QuestionSource)
+                          },
+                          Switch(
+                              ConditionType,
+                              "EQUALS",
+                              wVis && If(
+                                  !IsBlank(wRep.ValeurNumerique),
+                                  wRep.ValeurNumerique = Value(ConditionValeur),
+                                  !IsBlank(wRep.Valeur) && wRep.Valeur = ConditionValeur
+                              ),
+                              "GREATER_OR_EQUAL",
+                              wVis && !IsBlank(wRep.ValeurNumerique) && wRep.ValeurNumerique >= Value(ConditionValeur),
+                              "LESS_THAN",
+                              wVis && !IsBlank(wRep.ValeurNumerique) && wRep.ValeurNumerique < Value(ConditionValeur),
+                              "VISIBLE",
+                              wVis = (Upper(ConditionValeur) = "TRUE"),
+                              false
+                          )
+                      )
+                  )
+              );
+              With(
+                  {
+                      wMasque: !IsEmpty(Filter(colReglesEval, Vraie && Action = "MASQUER_FORMULAIRE")),
+                      wSourceMasque: LookUp(colReglesEval, Vraie && Action = "MASQUER_FORMULAIRE").QuestionSource
+                  },
+                  ClearCollect(
+                      colEtatQuestions,
+                      ForAll(
+                          colQuestionsFormulaire As wQ,
+                          {
+                              QuestionCode: wQ.QuestionCode,
+                              Visible: If(
+                                  wMasque && wQ.QuestionCode <> wSourceMasque,
+                                  false,
+                                  wQ.VisibleParDefaut
+                                      || !IsEmpty(Filter(colReglesEval, Vraie && Action = "AFFICHER" && QuestionCible = wQ.QuestionCode))
+                                      || (
+                                          !IsEmpty(Filter(colReglesEval, Vraie && Action = "AFFICHER_IF_MATCH" && QuestionCible = wQ.QuestionCode))
+                                          && !IsEmpty(Filter(colReglesEval, Vraie && Action = "WAITING_SECOND_CONDITION" && QuestionCible = wQ.QuestionCode))
+                                      )
+                              )
+                          }
+                      )
+                  )
+              );
+              // Étape 4 : évaluation finale des règles sur la visibilité stabilisée
+              // (profondeur des dépendances du catalogue v0.1 : 2 niveaux de visibilité ; 3 passes laissent une marge)
+              ClearCollect(
+                  colReglesEval,
+                  AddColumns(
+                      colReglesFormulaire,
+                      Vraie,
+                      With(
+                          {
+                              wVis: Coalesce(LookUp(colEtatQuestions, QuestionCode = QuestionSource).Visible, false),
+                              wRep: LookUp(colReponses, QuestionCode = QuestionSource)
+                          },
+                          Switch(
+                              ConditionType,
+                              "EQUALS",
+                              wVis && If(
+                                  !IsBlank(wRep.ValeurNumerique),
+                                  wRep.ValeurNumerique = Value(ConditionValeur),
+                                  !IsBlank(wRep.Valeur) && wRep.Valeur = ConditionValeur
+                              ),
+                              "GREATER_OR_EQUAL",
+                              wVis && !IsBlank(wRep.ValeurNumerique) && wRep.ValeurNumerique >= Value(ConditionValeur),
+                              "LESS_THAN",
+                              wVis && !IsBlank(wRep.ValeurNumerique) && wRep.ValeurNumerique < Value(ConditionValeur),
+                              "VISIBLE",
+                              wVis = (Upper(ConditionValeur) = "TRUE"),
+                              false
+                          )
+                      )
+                  )
+              );
+              // Étape 5 : état complet ; une question masquée n'est ni obligatoire ni contrôlée
               ClearCollect(
                   colEtatComplet,
                   ForAll(

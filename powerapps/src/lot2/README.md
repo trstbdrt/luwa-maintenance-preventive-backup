@@ -11,6 +11,7 @@ Prérequis : Lot 1 importé et validé. Plan général : `powerapps/canvas-app-b
 | `04-Screen_Home.pa.yaml` | Arborescence (écran) | Screen_Home du lot 1 (ajoute la récupération hors connexion) |
 | `06-Screen_Inspection.pa.yaml` | Arborescence (écran) | Screen_Inspection provisoire du lot 1 |
 | `08-tmrInspAutoSave.pa.yaml` | Sélectionner **Screen_Inspection** puis coller (contrôle) | — |
+| `07-btnInspEvaluer.OnSelect.fx` | Screen_Inspection > btnInspEvaluer > **OnSelect** | Uniquement si l'écran a été collé avant la correction du moteur (voir plus bas) |
 
 `App.Formulas`, Screen_Type, Screen_Identification et Screen_History ne changent pas.
 
@@ -31,7 +32,7 @@ Prérequis : Lot 1 importé et validé. Plan général : `powerapps/canvas-app-b
 
 - **Questionnaire** : questions du formulaire triées par OrdreAffichage, en-tête de groupe (Général, Corrosion, Sur pont)
   à chaque changement de groupe, sous-questions en retrait, `*` sur les questions obligatoires.
-- **Moteur de règles** (boutons techniques masqués) : calcul de la perte d'épaisseur, 4 passes d'évaluation des règles
+- **Moteur de règles** (une seule formule sur le bouton technique masqué `btnInspEvaluer` ; Power Apps interdit les appels en boucle entre boutons) : calcul de la perte d'épaisseur, 3 passes d'évaluation des règles
   (visibilité, condition composée, masquage du formulaire), puis état final (obligatoire, commentaire obligatoire,
   photos minimales, calcul bloqué). Une condition sur une question masquée ou vide est fausse.
 - **Enregistrement** : bouton « Enregistrer », automatique toutes les 60 s si des modifications sont en attente
@@ -64,3 +65,11 @@ Ouvrages de test : poteau `TEST 201`, luminaire `TEST 201-1`.
 | T34 | Luminaire : cocher puis décocher LUM_002 | Valeur FAIT puis vide (vérification SharePoint après enregistrement) |
 | T35 | Attendre 60 s après une modification sans enregistrer | Enregistrement automatique |
 | T36 | (Tablette, application mobile) mode avion, répondre, fermer l'application, rouvrir avec réseau | Accueil : « Reprendre et enregistrer » ; les réponses sont retrouvées puis enregistrées |
+
+## Correction du moteur (si l'écran a été collé avant)
+
+La première version utilisait des boutons qui s'appelaient en boucle (`btnInspPasse`, `btnInspPasseSuite`), ce que Power Apps refuse
+(« Select of this control results in a Select cycle that is not allowed »). Correction :
+
+1. supprimer `btnInspPasse`, `btnInspPasseSuite` et `btnInspFinaliser` ;
+2. coller `07-btnInspEvaluer.OnSelect.fx` dans `btnInspEvaluer` > **OnSelect** (remplace la formule existante).
