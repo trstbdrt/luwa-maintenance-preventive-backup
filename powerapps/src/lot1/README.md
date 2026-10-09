@@ -55,7 +55,7 @@ selon la version de Studio. Dans ce cas :
 
 ## Tests du lot 1
 
-Utiliser des ouvrages fictifs (`TEST-001`, `TEST-002`…) : aucune suppression n'est possible (D007).
+Utiliser des ouvrages fictifs au format réel : poteau `TEST 101`, luminaire `TEST 101-1` : aucune suppression n'est possible (D007).
 
 | # | Test | Attendu | Vérification |
 |------|------|------|------|

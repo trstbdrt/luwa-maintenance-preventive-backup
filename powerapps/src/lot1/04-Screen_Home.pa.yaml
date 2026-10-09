@@ -118,23 +118,54 @@ Screens:
             - lblRepriseLigne1:
                 Control: Label@2.5.1
                 Properties:
+                  OnSelect: =Select(Parent)
                   Text: =ThisItem.InspectionID & "  –  " & ThisItem.NomOuvrage
                   X: =16
                   Y: =8
-                  Width: =Parent.TemplateWidth - 200
+                  Width: =Parent.TemplateWidth - 250
                   Height: =32
                   FontWeight: =FontWeight.Semibold
             - lblRepriseLigne2:
                 Control: Label@2.5.1
                 Properties:
+                  OnSelect: =Select(Parent)
                   Text: |-
                     =ThisItem.TypeInspection.Value & "  ·  " & ThisItem.StatutInspection.Value
                     & "  ·  modifiée le " & Text(ThisItem.DateDerniereModification, "dd/mm/yyyy hh:mm")
                   X: =16
                   Y: =40
-                  Width: =Parent.TemplateWidth - 200
+                  Width: =Parent.TemplateWidth - 250
                   Height: =30
                   Size: =12
+            - icoRepriseOuvrir:
+                Control: Classic/Icon@2.5.0
+                Properties:
+                  Icon: =Icon.ChevronRight
+                  Color: =RGBA(15, 108, 189, 1)
+                  X: =Parent.TemplateWidth - 230
+                  Y: =(Parent.TemplateHeight - 32) / 2
+                  Width: =32
+                  Height: =32
+            - btnRepriseCarte:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  Text: =""
+                  X: =4
+                  Y: =4
+                  Width: =Parent.TemplateWidth - 186
+                  Height: =Parent.TemplateHeight - 8
+                  Fill: =RGBA(0, 0, 0, 0)
+                  HoverFill: =RGBA(15, 108, 189, 0.08)
+                  PressedFill: =RGBA(15, 108, 189, 0.18)
+                  BorderColor: =RGBA(200, 205, 212, 1)
+                  HoverBorderColor: =RGBA(15, 108, 189, 1)
+                  PressedBorderColor: =RGBA(15, 108, 189, 1)
+                  BorderThickness: =1
+                  RadiusTopLeft: =8
+                  RadiusTopRight: =8
+                  RadiusBottomLeft: =8
+                  RadiusBottomRight: =8
+                  OnSelect: =Select(Parent)
             - btnRepriseAbandonner:
                 Control: Classic/Button@2.2.0
                 Properties:

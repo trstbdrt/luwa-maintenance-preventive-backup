@@ -65,7 +65,7 @@ Screens:
               // Luminaire « E100 511-1 » : informations du poteau parent « E100 511 » (information non bloquante)
               UpdateContext({
                   locNomPoteauParent: If(
-                      gblTypeInspection = "LUMINAIRE" && IsMatch(gblNomOuvrage, ".*-[0-9]+"),
+                      gblTypeInspection = "LUMINAIRE" && IsMatch(gblNomOuvrage, ".*-[0-9]{1,2}"),
                       Left(gblNomOuvrage, Len(gblNomOuvrage) - Len(Last(Split(gblNomOuvrage, "-")).Value) - 1),
                       ""
                   )
@@ -192,7 +192,7 @@ Screens:
           Control: Label@2.5.1
           Properties:
             Visible: =locRechercheFaite
-            Text: ="Inspections de l'ouvrage"
+            Text: ="Historique des inspections de l'ouvrage"
             X: =800
             Y: =110
             Width: =520
@@ -217,21 +217,52 @@ Screens:
             - lblIdentHistoLigne1:
                 Control: Label@2.5.1
                 Properties:
+                  OnSelect: =Select(Parent)
                   Text: =ThisItem.InspectionID & "  ·  " & ThisItem.TypeInspection.Value
                   X: =16
                   Y: =6
-                  Width: =Parent.TemplateWidth - 32
+                  Width: =Parent.TemplateWidth - 64
                   Height: =32
                   FontWeight: =FontWeight.Semibold
             - lblIdentHistoLigne2:
                 Control: Label@2.5.1
                 Properties:
+                  OnSelect: =Select(Parent)
                   Text: =ThisItem.StatutInspection.Value & "  ·  créée le " & Text(ThisItem.DateCreation, "dd/mm/yyyy")
                   X: =16
                   Y: =38
-                  Width: =Parent.TemplateWidth - 32
+                  Width: =Parent.TemplateWidth - 64
                   Height: =30
                   Size: =12
+            - icoIdentHistoOuvrir:
+                Control: Classic/Icon@2.5.0
+                Properties:
+                  Icon: =Icon.ChevronRight
+                  Color: =RGBA(15, 108, 189, 1)
+                  X: =Parent.TemplateWidth - 48
+                  Y: =(Parent.TemplateHeight - 32) / 2
+                  Width: =32
+                  Height: =32
+            - btnIdentHistoCarte:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  Text: =""
+                  X: =4
+                  Y: =4
+                  Width: =Parent.TemplateWidth - 8
+                  Height: =Parent.TemplateHeight - 8
+                  Fill: =RGBA(0, 0, 0, 0)
+                  HoverFill: =RGBA(15, 108, 189, 0.08)
+                  PressedFill: =RGBA(15, 108, 189, 0.18)
+                  BorderColor: =RGBA(200, 205, 212, 1)
+                  HoverBorderColor: =RGBA(15, 108, 189, 1)
+                  PressedBorderColor: =RGBA(15, 108, 189, 1)
+                  BorderThickness: =1
+                  RadiusTopLeft: =8
+                  RadiusTopRight: =8
+                  RadiusBottomLeft: =8
+                  RadiusBottomRight: =8
+                  OnSelect: =Select(Parent)
       - lblIdentRelancer:
           Control: Label@2.5.1
           Properties:
@@ -248,8 +279,8 @@ Screens:
           Properties:
             Visible: |-
               =locRechercheFaite && (
-                  (gblTypeInspection = "LUMINAIRE" && !IsMatch(gblNomOuvrage, ".*-[0-9]+"))
-                  || (gblTypeInspection = "POTEAU" && IsMatch(gblNomOuvrage, ".*-[0-9]+"))
+                  (gblTypeInspection = "LUMINAIRE" && !IsMatch(gblNomOuvrage, ".*-[0-9]{1,2}"))
+                  || (gblTypeInspection = "POTEAU" && IsMatch(gblNomOuvrage, ".*-[0-9]{1,2}"))
               )
             Text: |-
               =If(

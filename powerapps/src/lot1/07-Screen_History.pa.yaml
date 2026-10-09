@@ -68,21 +68,52 @@ Screens:
             - lblHistResLigne1:
                 Control: Label@2.5.1
                 Properties:
+                  OnSelect: =Select(Parent)
                   Text: =ThisItem.InspectionID & "  ·  " & ThisItem.TypeInspection.Value
                   X: =16
                   Y: =6
-                  Width: =Parent.TemplateWidth - 32
+                  Width: =Parent.TemplateWidth - 64
                   Height: =32
                   FontWeight: =FontWeight.Semibold
             - lblHistResLigne2:
                 Control: Label@2.5.1
                 Properties:
+                  OnSelect: =Select(Parent)
                   Text: =ThisItem.StatutInspection.Value & "  ·  " & Text(ThisItem.DateCreation, "dd/mm/yyyy")
                   X: =16
                   Y: =38
-                  Width: =Parent.TemplateWidth - 32
+                  Width: =Parent.TemplateWidth - 64
                   Height: =30
                   Size: =12
+            - icoHistResOuvrir:
+                Control: Classic/Icon@2.5.0
+                Properties:
+                  Icon: =Icon.ChevronRight
+                  Color: =RGBA(15, 108, 189, 1)
+                  X: =Parent.TemplateWidth - 48
+                  Y: =(Parent.TemplateHeight - 32) / 2
+                  Width: =32
+                  Height: =32
+            - btnHistResCarte:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  Text: =""
+                  X: =4
+                  Y: =4
+                  Width: =Parent.TemplateWidth - 8
+                  Height: =Parent.TemplateHeight - 8
+                  Fill: =RGBA(0, 0, 0, 0)
+                  HoverFill: =RGBA(15, 108, 189, 0.08)
+                  PressedFill: =RGBA(15, 108, 189, 0.18)
+                  BorderColor: =RGBA(200, 205, 212, 1)
+                  HoverBorderColor: =RGBA(15, 108, 189, 1)
+                  PressedBorderColor: =RGBA(15, 108, 189, 1)
+                  BorderThickness: =1
+                  RadiusTopLeft: =8
+                  RadiusTopRight: =8
+                  RadiusBottomLeft: =8
+                  RadiusBottomRight: =8
+                  OnSelect: =Select(Parent)
       - lblHistDetail:
           Control: Label@2.5.1
           Properties:
@@ -158,7 +189,7 @@ Screens:
           Variant: BrowseLayout_Horizontal_TwoTextOneImageVariant_ver5.0
           Properties:
             Visible: =!IsBlank(gblInspectionConsultee)
-            Items: =colPhotosConsultees
+            Items: =Filter(PHOTOS_INSPECTIONS, InspectionGUID = gblInspectionConsultee.InspectionGUID)
             X: =500
             Y: =540
             Width: =830
@@ -168,7 +199,7 @@ Screens:
             - imgHistPhoto:
                 Control: Image@2.2.3
                 Properties:
-                  Image: =ThisItem.Thumbnail.Large
+                  Image: =ThisItem.'{Thumbnail}'.Large
                   X: =4
                   Y: =4
                   Width: =130
