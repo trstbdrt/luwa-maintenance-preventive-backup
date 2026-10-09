@@ -40,3 +40,18 @@ Screen_Home et Screen_Inspection : inchangés (lot 3).
 | K8 | Ouvrir le CSV dans Excel | Colonnes séparées, accents corrects |
 | K9 | Historique de l'app sur `E900 001` après rangement | Photos toujours visibles |
 | K10 | Inspection inaccessible sur `E900 002` | Dossier `E900 002/<date> POTEAU <id>/` avec PDF (motif) et CSV |
+
+## Mise à jour 4.1 — réponses affichées = réponses enregistrées
+
+Constat (TEST 300) : un bouton radio pouvait rester affiché « coché » sans que la réponse soit en mémoire
+(état interne du contrôle Radio dans la galerie), d'où un compteur « Reste … » qui ne bougeait pas.
+
+- Les boutons radio et cases à cocher sont remplacés par des **boutons de choix** (`galQOptions` / `btnQOption`) dont
+  l'apparence est calculée uniquement à partir de `colReponses` : un choix affiché en bleu est forcément enregistré.
+  Case à cocher : un second appui décoche.
+- Le moteur de règles n'est plus appelé directement à chaque modification : la modification incrémente
+  `gblVersionReponses` et le minuteur `tmrInspEvaluer` relance l'évaluation dès que la précédente est terminée
+  (aucune évaluation perdue si l'on répond vite).
+
+Étapes : App > OnStart (ajout de 3 lignes : `gblVersionReponses`, `gblVersionEvaluee`, `gblEvaluationEnCours`) + Run OnStart ;
+supprimer **Screen_Inspection**, coller `06-Screen_Inspection.pa.yaml` (lot 4) ; caméra à réinsérer si refusée ; Save, Publish.

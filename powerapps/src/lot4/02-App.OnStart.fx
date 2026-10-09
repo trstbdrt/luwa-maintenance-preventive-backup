@@ -20,6 +20,9 @@ Set(gblRestePhotos, 0);
 Set(gblQuestionCible, "");
 Set(gblInspectionChargee, "");
 Set(gblClesAffichees, "");
+Set(gblVersionReponses, 0);
+Set(gblVersionEvaluee, 0);
+Set(gblEvaluationEnCours, false);
 
 // --- Catalogues (lus une fois, choix convertis en texte) -----------------
 ClearCollect(
