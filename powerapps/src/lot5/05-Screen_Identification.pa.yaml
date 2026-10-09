@@ -528,7 +528,7 @@ Screens:
             Y: =680
             Width: =200
             Height: =50
-            OnSelect: =Navigate(Screen_Type, ScreenTransition.None)
+            OnSelect: =Navigate(Screen_Home, ScreenTransition.None)
       - rectIdentVoile:
           Control: Rectangle@2.3.0
           Properties:

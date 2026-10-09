@@ -49,3 +49,14 @@ nouvel essai possible. Photos facultatives, 10 au maximum ; nombre de photos ind
 
 Tests : I1 inaccessible sans photo (comme avant) ; I2 avec 2 photos → dossier de l'ouvrage : PDF, CSV, 2 photos SYS_001 ;
 I3 avec ma propre inspection en cours (DEC-28) → cette inspection devient inaccessible, ses photos et les photos SYS_001 rangées ensemble.
+
+## Accueil repensé (5.0)
+
+`04-Screen_Home.pa.yaml` :
+- deux grandes tuiles « Inspecter un poteau » / « Inspecter un luminaire » (l'écran Screen_Type n'est plus utilisé) ;
+- « Reprendre une de mes inspections en cours (n) » : visible seulement s'il y en a, 3 lignes visibles puis défilement ;
+  « Reprendre › » et lien « Abandonner » par ligne ;
+- « Consulter l'historique › » en lien discret en bas à droite ;
+- bandeaux « Hors connexion » et « inspection non enregistrée sur la tablette » (avec « Récupérer et enregistrer ») en haut.
+
+`05-Screen_Identification.pa.yaml` : « Retour » ramène à l'accueil (btnIdentRetour.OnSelect = `Navigate(Screen_Home, ScreenTransition.None)`).
