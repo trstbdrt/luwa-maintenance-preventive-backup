@@ -33,3 +33,9 @@
 `04-Screen_Home.pa.yaml` : la liste « Reprendre » affiche le nom de l'ouvrage et « Poteau / Luminaire · modifiée le … »
 (plus d'identifiant ni de statut) ; messages de récupération locale et d'abandon sans identifiant.
 Étapes : supprimer **Screen_Home**, coller le fichier ; Save ; Publish.
+
+## Identification et historique (5.0)
+
+- `05-Screen_Identification.pa.yaml` : plus d'identifiant dans « Déjà inspecté », « inspection en cours » et l'inaccessibilité ;
+  historique de l'ouvrage : « date · Poteau » / « statut · inspecteur ».
+- `07-Screen_History.pa.yaml` : mêmes lignes ; en-tête du détail « ouvrage · type · statut » (statuts en français).
