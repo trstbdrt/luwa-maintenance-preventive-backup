@@ -82,6 +82,18 @@ Screens:
                   locDernierePoteauParent: Blank()
               });
               SetFocus(txtIdentOuvrage)
+      - lblIdentHorsLigne:
+          Control: Label@2.5.1
+          Properties:
+            Visible: =!locRechercheFaite && !Connection.Connected
+            Text: |-
+              ="⚠ Hors connexion : la recherche d'un ouvrage et le démarrage d'une inspection nécessitent le réseau."
+            Size: =13
+            Color: =RGBA(176, 96, 0, 1)
+            X: =40
+            Y: =172
+            Width: =720
+            Height: =50
       - lblIdentNomSaisi:
           Control: Label@2.5.1
           Properties:
@@ -115,83 +127,87 @@ Screens:
             Height: =56
             DisplayMode: =If(IsBlank(Trim(txtIdentOuvrage.Text)), DisplayMode.Disabled, DisplayMode.Edit)
             OnSelect: |-
-              =// DEC-29 : l'ouvrage est reconnu par sa clé ; l'orthographe affichée est celle déjà connue, sinon le format « E100 511 »
-              With(
-                  {
-                      wCle: lblIdentCleSaisie.Text,
-                      wBase: If(
-                          IsMatch(lblIdentCleSaisie.Text, ".+-[0-9]{1,2}"),
-                          Left(lblIdentCleSaisie.Text, Len(lblIdentCleSaisie.Text) - Len(Last(Split(lblIdentCleSaisie.Text, "-")).Value) - 1),
-                          lblIdentCleSaisie.Text
-                      )
-                  },
+              =If(
+                  !Connection.Connected,
+                  Notify("Hors connexion : la recherche d'un ouvrage nécessite le réseau.", NotificationType.Warning),
+                  // DEC-29 : l'ouvrage est reconnu par sa clé ; l'orthographe affichée est celle déjà connue, sinon le format « E100 511 »
                   With(
                       {
-                          wSuffixe: Mid(wCle, Len(wBase) + 1),
-                          wFormat: With({wM: Match(wBase, "^(?<p>[A-Z]+[0-9]{3})(?<n>[0-9]+)$")}, If(IsBlank(wM), Blank(), wM.p & " " & wM.n)),
-                          wConnu: LookUp(INSPECTIONS, CleOuvrage = wCle).NomOuvrage,
-                          wBaseConnue: If(wBase <> wCle, LookUp(INSPECTIONS, CleOuvrage = wBase).NomOuvrage)
-                      },
-                      Set(gblCleOuvrage, wCle);
-                      Set(
-                          gblNomOuvrage,
-                          Coalesce(
-                              wConnu,
-                              If(!IsBlank(wBaseConnue), wBaseConnue & wSuffixe),
-                              If(!IsBlank(wFormat), wFormat & wSuffixe),
-                              lblIdentNomSaisi.Text
+                          wCle: lblIdentCleSaisie.Text,
+                          wBase: If(
+                              IsMatch(lblIdentCleSaisie.Text, ".+-[0-9]{1,2}"),
+                              Left(lblIdentCleSaisie.Text, Len(lblIdentCleSaisie.Text) - Len(Last(Split(lblIdentCleSaisie.Text, "-")).Value) - 1),
+                              lblIdentCleSaisie.Text
                           )
-                      );
-                      UpdateContext({locClePoteauParent: If(gblTypeInspection = "LUMINAIRE" && wSuffixe <> "", wBase, "")})
-                  )
-              );
-              ClearCollect(
-                  colHistoriqueOuvrage,
-                  Sort(Filter(INSPECTIONS, CleOuvrage = gblCleOuvrage), DateCreation, SortOrder.Descending)
-              );
-              UpdateContext({
-                  locDerniereInspection: First(Filter(colHistoriqueOuvrage, TypeInspection.Value = gblTypeInspection)),
-                  locRechercheFaite: true
-              });
-              // DEC-28 : une seule inspection en cours par personne (même ouvrage, même type)
-              With(
-                  {
-                      wEnCours: Filter(
-                          colHistoriqueOuvrage,
-                          TypeInspection.Value = gblTypeInspection
-                              && (StatutInspection.Value = "BROUILLON" || StatutInspection.Value = "EN_COURS")
+                      },
+                      With(
+                          {
+                              wSuffixe: Mid(wCle, Len(wBase) + 1),
+                              wFormat: With({wM: Match(wBase, "^(?<p>[A-Z]+[0-9]{3})(?<n>[0-9]+)$")}, If(IsBlank(wM), Blank(), wM.p & " " & wM.n)),
+                              wConnu: LookUp(INSPECTIONS, CleOuvrage = wCle).NomOuvrage,
+                              wBaseConnue: If(wBase <> wCle, LookUp(INSPECTIONS, CleOuvrage = wBase).NomOuvrage)
+                          },
+                          Set(gblCleOuvrage, wCle);
+                          Set(
+                              gblNomOuvrage,
+                              Coalesce(
+                                  wConnu,
+                                  If(!IsBlank(wBaseConnue), wBaseConnue & wSuffixe),
+                                  If(!IsBlank(wFormat), wFormat & wSuffixe),
+                                  lblIdentNomSaisi.Text
+                              )
+                          );
+                          UpdateContext({locClePoteauParent: If(gblTypeInspection = "LUMINAIRE" && wSuffixe <> "", wBase, "")})
                       )
-                  },
+                  );
+                  ClearCollect(
+                      colHistoriqueOuvrage,
+                      Sort(Filter(INSPECTIONS, CleOuvrage = gblCleOuvrage), DateCreation, SortOrder.Descending)
+                  );
                   UpdateContext({
-                      locMonInspectionEnCours: First(Sort(Filter(wEnCours, Lower(Inspecteur.Email) = Lower(User().Email)), DateCreation, SortOrder.Descending)),
-                      locAutresEnCours: Concat(
-                          Distinct(Filter(wEnCours, Lower(Inspecteur.Email) <> Lower(User().Email)), Inspecteur.DisplayName),
-                          Value,
-                          ", "
+                      locDerniereInspection: First(Filter(colHistoriqueOuvrage, TypeInspection.Value = gblTypeInspection)),
+                      locRechercheFaite: true
+                  });
+                  // DEC-28 : une seule inspection en cours par personne (même ouvrage, même type)
+                  With(
+                      {
+                          wEnCours: Filter(
+                              colHistoriqueOuvrage,
+                              TypeInspection.Value = gblTypeInspection
+                                  && (StatutInspection.Value = "BROUILLON" || StatutInspection.Value = "EN_COURS")
+                          )
+                      },
+                      UpdateContext({
+                          locMonInspectionEnCours: First(Sort(Filter(wEnCours, Lower(Inspecteur.Email) = Lower(User().Email)), DateCreation, SortOrder.Descending)),
+                          locAutresEnCours: Concat(
+                              Distinct(Filter(wEnCours, Lower(Inspecteur.Email) <> Lower(User().Email)), Inspecteur.DisplayName),
+                              Value,
+                              ", "
+                          )
+                      })
+                  );
+                  // Luminaire « E100 511-1 » : informations du poteau parent « E100 511 » (information non bloquante)
+                  UpdateContext({
+                      locNomPoteauParent: If(
+                          gblTypeInspection = "LUMINAIRE" && IsMatch(gblNomOuvrage, ".*-[0-9]{1,2}"),
+                          Left(gblNomOuvrage, Len(gblNomOuvrage) - Len(Last(Split(gblNomOuvrage, "-")).Value) - 1),
+                          ""
+                      )
+                  });
+                  UpdateContext({
+                      locDernierePoteauParent: If(
+                          IsBlank(locClePoteauParent),
+                          Blank(),
+                          First(
+                              Sort(
+                                  Filter(INSPECTIONS, CleOuvrage = locClePoteauParent && TypeInspection.Value = "POTEAU"),
+                                  DateCreation,
+                                  SortOrder.Descending
+                              )
+                          )
                       )
                   })
-              );
-              // Luminaire « E100 511-1 » : informations du poteau parent « E100 511 » (information non bloquante)
-              UpdateContext({
-                  locNomPoteauParent: If(
-                      gblTypeInspection = "LUMINAIRE" && IsMatch(gblNomOuvrage, ".*-[0-9]{1,2}"),
-                      Left(gblNomOuvrage, Len(gblNomOuvrage) - Len(Last(Split(gblNomOuvrage, "-")).Value) - 1),
-                      ""
-                  )
-              });
-              UpdateContext({
-                  locDernierePoteauParent: If(
-                      IsBlank(locClePoteauParent),
-                      Blank(),
-                      First(
-                          Sort(
-                              Filter(INSPECTIONS, CleOuvrage = locClePoteauParent && TypeInspection.Value = "POTEAU"),
-                              DateCreation,
-                              SortOrder.Descending
-                          )
-                      )
-                  )
-              })
+              )
       - lblIdentDerniere:
           Control: Label@2.5.1
           Properties:

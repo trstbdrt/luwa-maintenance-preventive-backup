@@ -44,17 +44,33 @@ Screens:
             Height: =50
             DisplayMode: =If(IsBlank(Trim(txtHistRecherche.Text)), DisplayMode.Disabled, DisplayMode.Edit)
             OnSelect: |-
-              =// DEC-29 : recherche par clé (majuscules, sans espaces)
-              UpdateContext({locRechercheOuvrage: Substitute(Upper(txtHistRecherche.Text), " ", ""), locHistTexte: Upper(Trim(txtHistRecherche.Text))});
-              ClearCollect(
-                  colHistorique,
-                  Sort(Filter(INSPECTIONS, CleOuvrage = locRechercheOuvrage), DateCreation, SortOrder.Descending)
-              );
-              UpdateContext({locHistRechercheFaite: true})
+              =If(
+                  !Connection.Connected,
+                  Notify("Hors connexion : l'historique n'est consultable qu'avec du réseau.", NotificationType.Warning),
+                  // DEC-29 : recherche par clé (majuscules, sans espaces)
+                  UpdateContext({locRechercheOuvrage: Substitute(Upper(txtHistRecherche.Text), " ", ""), locHistTexte: Upper(Trim(txtHistRecherche.Text))});
+                  ClearCollect(
+                      colHistorique,
+                      Sort(Filter(INSPECTIONS, CleOuvrage = locRechercheOuvrage), DateCreation, SortOrder.Descending)
+                  );
+                  UpdateContext({locHistRechercheFaite: true})
+              )
+      - lblHistHorsLigne:
+          Control: Label@2.5.1
+          Properties:
+            Visible: =locDepuisAccueil && !Connection.Connected
+            Text: |-
+              ="⚠ Hors connexion : l'historique n'est consultable qu'avec du réseau."
+            Size: =13
+            Color: =RGBA(176, 96, 0, 1)
+            X: =40
+            Y: =160
+            Width: =440
+            Height: =60
       - lblHistAucun:
           Control: Label@2.5.1
           Properties:
-            Visible: =locDepuisAccueil && locHistRechercheFaite && IsEmpty(colHistorique)
+            Visible: =locDepuisAccueil && locHistRechercheFaite && IsEmpty(colHistorique) && Connection.Connected
             Text: ="Aucune inspection trouvée pour « " & locHistTexte & " »."
             Size: =13
             Italic: =true
