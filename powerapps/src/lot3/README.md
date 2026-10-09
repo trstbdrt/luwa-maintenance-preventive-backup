@@ -82,3 +82,13 @@ Poteau `TEST 301`, luminaire `TEST 301-1`. Tablette avec l'application mobile Po
 
 Étapes : App > OnStart (ajout `Set(gblInspectionChargee, "")`) puis Run OnStart ; supprimer **Screen_Inspection**,
 coller `06-Screen_Inspection.pa.yaml` ; Save, Publish.
+
+## Mise à jour 3.3 (test tablette)
+
+- Réponses « cochées » mais non enregistrées (6 questions) : la liste des questions n'est plus reconstruite à chaque réponse
+  (seulement si les questions affichées changent, `gblClesAffichees`) ; une sélection vide ne peut plus effacer une réponse.
+- Photos : sauvegarde locale à la prise et à la suppression seulement (plus à chaque réponse) → saisie plus fluide.
+- Boutons radio plus hauts (48) et lignes à 100 : plus de défilement interne par question.
+- Bouton « 🔄 Changer de caméra ».
+
+Étapes : OnStart (ajout `Set(gblClesAffichees, "")`) + Run OnStart ; supprimer Screen_Inspection, coller `06-Screen_Inspection.pa.yaml`.

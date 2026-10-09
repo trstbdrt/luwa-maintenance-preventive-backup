@@ -289,14 +289,36 @@ Set(
     )
 );
 // Lignes affichées, avec en-tête de groupe à chaque changement de DisplayGroup
+// La liste n'est reconstruite que si les questions affichées changent : sinon la galerie recrée ses lignes
+// et une réponse touchée pendant le calcul peut rester affichée sans être enregistrée
 ClearCollect(colQV, Sort(Filter(colEtatComplet, Visible), OrdreAffichage));
-ClearCollect(
-    colQuestionsAffichees,
+If(
+    Concat(colQV, QuestionCode, ",") <> gblClesAffichees,
+    ClearCollect(
+        colQuestionsAffichees,
+        ForAll(
+            Sequence(CountRows(colQV)) As wI,
+            Patch(
+                Index(colQV, wI.Value),
+                {DebutGroupe: wI.Value = 1 || Index(colQV, wI.Value - 1).DisplayGroup <> Index(colQV, wI.Value).DisplayGroup}
+            )
+        )
+    );
+    Set(gblClesAffichees, Concat(colQV, QuestionCode, ",")),
+    // Même liste : seules les lignes dont l'état a changé sont mises à jour
     ForAll(
-        Sequence(CountRows(colQV)) As wI,
+        Filter(
+            colQV As wQ,
+            With(
+                {wA: LookUp(colQuestionsAffichees, QuestionCode = wQ.QuestionCode)},
+                wA.ObligatoireEff <> wQ.ObligatoireEff || wA.CommentaireObligatoireEff <> wQ.CommentaireObligatoireEff
+                    || wA.PhotosMin <> wQ.PhotosMin || wA.CalculBloque <> wQ.CalculBloque
+            )
+        ) As wC,
         Patch(
-            Index(colQV, wI.Value),
-            {DebutGroupe: wI.Value = 1 || Index(colQV, wI.Value - 1).DisplayGroup <> Index(colQV, wI.Value).DisplayGroup}
+            colQuestionsAffichees,
+            LookUp(colQuestionsAffichees, QuestionCode = wC.QuestionCode),
+            {ObligatoireEff: wC.ObligatoireEff, CommentaireObligatoireEff: wC.CommentaireObligatoireEff, PhotosMin: wC.PhotosMin, CalculBloque: wC.CalculBloque}
         )
     )
 );
@@ -306,5 +328,5 @@ ClearCollect(
     {InspectionGUID: gblInspectionGUID, InspectionID: gblInspectionID, TypeInspection: gblTypeInspection, NomOuvrage: gblNomOuvrage}
 );
 IfError(SaveData(colContexteLocal, "luwa_contexte"); true, false);
-IfError(SaveData(colReponses, "luwa_reponses"); true, false);
-IfError(SaveData(colPhotos, "luwa_photos"); true, false)
+// Photos : sauvegardées à la prise / suppression uniquement (volumineuses)
+IfError(SaveData(colReponses, "luwa_reponses"); true, false)

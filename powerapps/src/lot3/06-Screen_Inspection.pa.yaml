@@ -60,6 +60,7 @@ Screens:
                 )
             );
             ClearCollect(colEtatQuestions, ForAll(colQuestionsFormulaire, {QuestionCode: QuestionCode, Visible: VisibleParDefaut}));
+            Set(gblClesAffichees, "");
             Set(gblInspectionChargee, gblInspectionGUID)
         );
         UpdateContext({locQuestionActive: "", locAfficherPanneauCommentaire: false, locAfficherPanneauPhotos: false, locEnregistrementEnCours: false, locQuitterApresEnregistrement: false, locAllerResume: false, locCamera: 0, locEnvoiPhotosEnCours: false});
@@ -179,7 +180,7 @@ Screens:
             Y: =100
             Width: =1286
             Height: =580
-            TemplateSize: =92
+            TemplateSize: =100
             TemplatePadding: =0
             Default: =LookUp(colQuestionsAffichees, QuestionCode = gblQuestionCible)
             TemplateFill: =If(ThisItem.QuestionCode = gblQuestionCible, RGBA(255, 244, 222, 1), RGBA(0, 0, 0, 0))
@@ -222,12 +223,12 @@ Screens:
                   X: =If(IsBlank(ThisItem.QuestionParent), 16, 56)
                   Y: =If(ThisItem.DebutGroupe, 50, 38)
                   Width: =Parent.TemplateWidth - 260
-                  Height: =40
+                  Height: =48
                   OnChange: |-
                     =With(
                         {wCode: ThisItem.QuestionCode, wVal: With({wCodes: Split(ThisItem.ValeursPossibles, "|"), wLibs: Split(Coalesce(ThisItem.LibellesValeurs, ThisItem.ValeursPossibles), "|"), wL: Self.Selected.Value}, With({wPos: First(Filter(Sequence(CountRows(wLibs)), Index(wLibs, Value).Value = wL)).Value}, If(IsBlank(wPos), wL, Index(wCodes, wPos).Value))), wEx: LookUp(colReponses, QuestionCode = ThisItem.QuestionCode)},
                         If(
-                            Coalesce(wEx.Valeur, "") <> Coalesce(wVal, ""),
+                            !IsBlank(wVal) && Coalesce(wEx.Valeur, "") <> wVal,
                             If(
                                 IsBlank(wEx),
                                 Collect(colReponses, {ReponseID: Text(GUID()), QuestionCode: wCode, Valeur: wVal, ValeurNumerique: Blank(), Commentaire: Blank(), SharePointID: Blank(), EtatSynchro: "NOUVELLE"}),
@@ -932,14 +933,36 @@ Screens:
                   )
               );
               // Lignes affichées, avec en-tête de groupe à chaque changement de DisplayGroup
+              // La liste n'est reconstruite que si les questions affichées changent : sinon la galerie recrée ses lignes
+              // et une réponse touchée pendant le calcul peut rester affichée sans être enregistrée
               ClearCollect(colQV, Sort(Filter(colEtatComplet, Visible), OrdreAffichage));
-              ClearCollect(
-                  colQuestionsAffichees,
+              If(
+                  Concat(colQV, QuestionCode, ",") <> gblClesAffichees,
+                  ClearCollect(
+                      colQuestionsAffichees,
+                      ForAll(
+                          Sequence(CountRows(colQV)) As wI,
+                          Patch(
+                              Index(colQV, wI.Value),
+                              {DebutGroupe: wI.Value = 1 || Index(colQV, wI.Value - 1).DisplayGroup <> Index(colQV, wI.Value).DisplayGroup}
+                          )
+                      )
+                  );
+                  Set(gblClesAffichees, Concat(colQV, QuestionCode, ",")),
+                  // Même liste : seules les lignes dont l'état a changé sont mises à jour
                   ForAll(
-                      Sequence(CountRows(colQV)) As wI,
+                      Filter(
+                          colQV As wQ,
+                          With(
+                              {wA: LookUp(colQuestionsAffichees, QuestionCode = wQ.QuestionCode)},
+                              wA.ObligatoireEff <> wQ.ObligatoireEff || wA.CommentaireObligatoireEff <> wQ.CommentaireObligatoireEff
+                                  || wA.PhotosMin <> wQ.PhotosMin || wA.CalculBloque <> wQ.CalculBloque
+                          )
+                      ) As wC,
                       Patch(
-                          Index(colQV, wI.Value),
-                          {DebutGroupe: wI.Value = 1 || Index(colQV, wI.Value - 1).DisplayGroup <> Index(colQV, wI.Value).DisplayGroup}
+                          colQuestionsAffichees,
+                          LookUp(colQuestionsAffichees, QuestionCode = wC.QuestionCode),
+                          {ObligatoireEff: wC.ObligatoireEff, CommentaireObligatoireEff: wC.CommentaireObligatoireEff, PhotosMin: wC.PhotosMin, CalculBloque: wC.CalculBloque}
                       )
                   )
               );
@@ -949,8 +972,8 @@ Screens:
                   {InspectionGUID: gblInspectionGUID, InspectionID: gblInspectionID, TypeInspection: gblTypeInspection, NomOuvrage: gblNomOuvrage}
               );
               IfError(SaveData(colContexteLocal, "luwa_contexte"); true, false);
-              IfError(SaveData(colReponses, "luwa_reponses"); true, false);
-              IfError(SaveData(colPhotos, "luwa_photos"); true, false)
+              // Photos : sauvegardées à la prise / suppression uniquement (volumineuses)
+              IfError(SaveData(colReponses, "luwa_reponses"); true, false)
       - rectInspVoile:
           Control: Rectangle@2.3.0
           Properties:
@@ -1098,6 +1121,7 @@ Screens:
                                 }
                             )
                         );
+                        IfError(SaveData(colPhotos, "luwa_photos"); true, false);
                         Notify("Photo " & CountRows(Filter(colPhotos, QuestionCode = locQuestionActive)) & " ajoutée.", NotificationType.Success, 1500);
                         // Question de type PHOTO : réponse PHOTO_CAPTURED dès la première photo (DEC-10)
                         With(
@@ -1126,7 +1150,7 @@ Screens:
             - btnPhotoCamera:
                 Control: Classic/Button@2.2.0
                 Properties:
-                  Text: ="Changer de caméra"
+                  Text: ="🔄  Changer de caméra"
                   X: =544
                   Y: =612
                   Width: =200
@@ -1173,6 +1197,7 @@ Screens:
                         Height: =40
                         OnSelect: |-
                           =Remove(colPhotos, ThisItem);
+                          IfError(SaveData(colPhotos, "luwa_photos"); true, false);
                           Select(btnInspEvaluer)
             - btnPhotoFermer:
                 Control: Classic/Button@2.2.0
