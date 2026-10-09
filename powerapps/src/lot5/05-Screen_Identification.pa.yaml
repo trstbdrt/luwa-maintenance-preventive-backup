@@ -21,7 +21,8 @@ Screens:
       - lblIdentTitre:
           Control: Label@2.5.1
           Properties:
-            Text: ="Identification de l'ouvrage — " & gblTypeInspection
+            Text: |-
+              =If(gblTypeInspection = "LUMINAIRE", "Inspection d'un luminaire", "Inspection d'un poteau")
             X: =40
             Y: =30
             Width: =1000
@@ -31,13 +32,56 @@ Screens:
       - txtIdentOuvrage:
           Control: Classic/TextInput@2.3.2
           Properties:
+            Visible: =!locRechercheFaite
             Default: =""
-            HintText: ="Nom de l'ouvrage (ex. E100 511)"
+            HintText: =If(gblTypeInspection = "LUMINAIRE", "Nom du luminaire (ex. E100 511-1)", "Nom du poteau (ex. E100 511)")
             X: =40
             Y: =110
             Width: =500
             Height: =56
             Size: =18
+      - lblIdentOuvrage:
+          Control: Label@2.5.1
+          Properties:
+            Visible: =locRechercheFaite
+            Text: =gblNomOuvrage
+            Size: =28
+            FontWeight: =FontWeight.Semibold
+            X: =40
+            Y: =104
+            Width: =520
+            Height: =60
+      - btnIdentChanger:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Visible: =locRechercheFaite
+            Text: ="Changer d'ouvrage"
+            Size: =13
+            Underline: =true
+            Align: =Align.Right
+            Fill: =RGBA(0, 0, 0, 0)
+            Color: =RGBA(15, 108, 189, 1)
+            HoverFill: =RGBA(0, 0, 0, 0)
+            HoverColor: =RGBA(12, 90, 160, 1)
+            PressedFill: =RGBA(0, 0, 0, 0)
+            BorderThickness: =0
+            X: =560
+            Y: =116
+            Width: =200
+            Height: =40
+            OnSelect: |-
+              =// Retour à la saisie (le nom reste dans la case pour être corrigé)
+              Clear(colHistoriqueOuvrage);
+              UpdateContext({
+                  locRechercheFaite: false,
+                  locDerniereInspection: Blank(),
+                  locMonInspectionEnCours: Blank(),
+                  locAutresEnCours: "",
+                  locNomPoteauParent: "",
+                  locClePoteauParent: "",
+                  locDernierePoteauParent: Blank()
+              });
+              SetFocus(txtIdentOuvrage)
       - lblIdentNomSaisi:
           Control: Label@2.5.1
           Properties:
@@ -76,6 +120,7 @@ Screens:
       - btnIdentRechercher:
           Control: Classic/Button@2.2.0
           Properties:
+            Visible: =!locRechercheFaite
             Text: ="Rechercher"
             X: =560
             Y: =110
