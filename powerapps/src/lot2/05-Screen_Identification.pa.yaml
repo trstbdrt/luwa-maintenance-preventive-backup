@@ -108,26 +108,44 @@ Screens:
           Properties:
             Visible: =locRechercheFaite
             Text: |-
-              =If(
-                  IsBlank(locDerniereInspection),
-                  "Aucune inspection " & gblTypeInspection & " connue pour l'ouvrage " & gblNomOuvrage & ".",
-                  "Dernière inspection " & gblTypeInspection & " : "
-                  & Switch(
-                      locDerniereInspection.StatutInspection.Value,
-                      "TERMINE", "Terminée",
-                      "EN_COURS", "En cours",
-                      "BROUILLON", "Brouillon",
-                      "INACCESSIBLE", "Inaccessible",
-                      "ARCHIVE", "Archivée",
-                      "ABANDONNE", "Abandonnée",
-                      locDerniereInspection.StatutInspection.Value
+              =With(
+                  {
+                      // Dernière inspection soumise (TERMINE ou ARCHIVE) du même type : information seulement
+                      wFaite: First(
+                          Filter(
+                              colHistoriqueOuvrage,
+                              TypeInspection.Value = gblTypeInspection
+                                  && (StatutInspection.Value = "TERMINE" || StatutInspection.Value = "ARCHIVE")
+                          )
+                      )
+                  },
+                  If(
+                      IsBlank(locDerniereInspection),
+                      "Aucune inspection " & gblTypeInspection & " connue pour l'ouvrage " & gblNomOuvrage & ".",
+                      "Dernière inspection " & gblTypeInspection & " : "
+                      & Switch(
+                          locDerniereInspection.StatutInspection.Value,
+                          "TERMINE", "Terminée",
+                          "EN_COURS", "En cours",
+                          "BROUILLON", "Brouillon",
+                          "INACCESSIBLE", "Inaccessible",
+                          "ARCHIVE", "Archivée",
+                          "ABANDONNE", "Abandonnée",
+                          locDerniereInspection.StatutInspection.Value
+                      )
+                      & " (" & Text(locDerniereInspection.DateCreation, "dd/mm/yyyy") & ")"
                   )
-                  & " (" & Text(locDerniereInspection.DateCreation, "dd/mm/yyyy") & ")"
+                  & If(
+                      IsBlank(wFaite),
+                      "",
+                      Char(10) & "ℹ Déjà inspecté : soumise le " & Text(wFaite.DateSoumission, "dd/mm/yyyy")
+                      & " par " & wFaite.Inspecteur.DisplayName & " (" & wFaite.InspectionID & ")."
+                  )
               )
             X: =40
-            Y: =190
+            Y: =168
             Width: =720
-            Height: =40
+            Height: =64
             FontWeight: =FontWeight.Semibold
       - lblIdentMonEnCours:
           Control: Label@2.5.1
