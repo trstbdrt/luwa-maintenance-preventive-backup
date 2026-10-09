@@ -166,8 +166,8 @@ Screens:
                       // Copie locale vidée : l'inspection est soumise (DEC-25)
                       Clear(colReponses);
                       Clear(colPhotos);
-                      IfError(SaveData(colReponses, "luwa_reponses"), false);
-                      IfError(SaveData(colPhotos, "luwa_photos"), false);
+                      IfError(SaveData(colReponses, "luwa_reponses"); true, false);
+                      IfError(SaveData(colPhotos, "luwa_photos"); true, false);
                       Set(gblQuestionCible, "");
                       Notify("Inspection " & gblInspectionID & " soumise.", NotificationType.Success);
                       Navigate(Screen_Home, ScreenTransition.None),

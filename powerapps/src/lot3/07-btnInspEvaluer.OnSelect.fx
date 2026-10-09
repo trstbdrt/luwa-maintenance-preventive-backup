@@ -300,6 +300,6 @@ ClearCollect(
     colContexteLocal,
     {InspectionGUID: gblInspectionGUID, InspectionID: gblInspectionID, TypeInspection: gblTypeInspection, NomOuvrage: gblNomOuvrage}
 );
-IfError(SaveData(colContexteLocal, "luwa_contexte"), false);
-IfError(SaveData(colReponses, "luwa_reponses"), false);
-IfError(SaveData(colPhotos, "luwa_photos"), false)
+IfError(SaveData(colContexteLocal, "luwa_contexte"); true, false);
+IfError(SaveData(colReponses, "luwa_reponses"); true, false);
+IfError(SaveData(colPhotos, "luwa_photos"); true, false)
