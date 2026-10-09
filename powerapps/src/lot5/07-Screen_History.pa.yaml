@@ -7,10 +7,8 @@ Screens:
         Clear(colHistorique);
         If(
             IsBlank(gblInspectionConsultee),
-            Clear(colReponsesConsultees);
-            Clear(colPhotosConsultees),
-            ClearCollect(colReponsesConsultees, Filter(REPONSES, InspectionGUID = gblInspectionConsultee.InspectionGUID));
-            ClearCollect(colPhotosConsultees, Filter(PHOTOS_INSPECTIONS, InspectionGUID = gblInspectionConsultee.InspectionGUID))
+            Clear(colReponsesConsultees),
+            ClearCollect(colReponsesConsultees, Filter(REPONSES, InspectionGUID = gblInspectionConsultee.InspectionGUID))
         )
     Children:
       - lblHistTitre:
@@ -92,8 +90,8 @@ Screens:
             TemplateSize: =76
             OnSelect: |-
               =Set(gblInspectionConsultee, ThisItem);
-              ClearCollect(colReponsesConsultees, Filter(REPONSES, InspectionGUID = ThisItem.InspectionGUID));
-              ClearCollect(colPhotosConsultees, Filter(PHOTOS_INSPECTIONS, InspectionGUID = ThisItem.InspectionGUID))
+              ClearCollect(colReponsesConsultees, Filter(REPONSES, InspectionGUID = ThisItem.InspectionGUID))
+              // photos : lues directement par galHistPhotos (la miniature n'est pas conservée dans une collection)
           Children:
             - lblHistResLigne1:
                 Control: Label@2.5.1
@@ -229,7 +227,7 @@ Screens:
           Variant: BrowseLayout_Horizontal_TwoTextOneImageVariant_ver5.0
           Properties:
             Visible: =!IsBlank(gblInspectionConsultee)
-            Items: =colPhotosConsultees
+            Items: =Filter(PHOTOS_INSPECTIONS, InspectionGUID = gblInspectionConsultee.InspectionGUID)
             X: =500
             Y: =540
             Width: =830
