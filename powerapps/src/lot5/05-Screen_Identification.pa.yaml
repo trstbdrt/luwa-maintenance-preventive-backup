@@ -178,8 +178,8 @@ Screens:
                   },
                   If(
                       IsBlank(locDerniereInspection),
-                      "Aucune inspection " & gblTypeInspection & " connue pour l'ouvrage " & gblNomOuvrage & ".",
-                      "Dernière inspection " & gblTypeInspection & " : "
+                      "Aucun historique d'inspection " & Lower(gblTypeInspection) & " pour l'ouvrage " & gblNomOuvrage & ".",
+                      "Dernière inspection " & Lower(gblTypeInspection) & " : "
                       & Switch(
                           locDerniereInspection.StatutInspection.Value,
                           "TERMINE", "Terminée",
