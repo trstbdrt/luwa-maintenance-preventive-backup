@@ -58,17 +58,13 @@ Screens:
             Height: =90
             Size: =18
             OnSelect: |-
-              =ClearCollect(
-                  colInspectionsAReprendre,
-                  Sort(
-                      Filter(
-                          Filter(INSPECTIONS, StatutInspection.Value = "BROUILLON" || StatutInspection.Value = "EN_COURS"),
-                          Lower(Inspecteur.Email) = Lower(User().Email)
-                      ),
-                      DateDerniereModification,
-                      SortOrder.Descending
-                  )
-              );
+              =// 1. SharePoint (délégué, colonne indexée) : inspections en brouillon ou en cours, tous utilisateurs (max. 2000)
+ClearCollect(colEnCoursTous, Filter(INSPECTIONS, StatutInspection.Value = "BROUILLON" || StatutInspection.Value = "EN_COURS"));
+// 2. Application : celles de l'utilisateur connecté (comparaison insensible à la casse)
+ClearCollect(
+    colInspectionsAReprendre,
+    Sort(Filter(colEnCoursTous, Lower(Inspecteur.Email) = Lower(User().Email)), DateDerniereModification, SortOrder.Descending)
+);
               UpdateContext({locAfficherReprise: true})
       - btnHomeHistorique:
           Control: Classic/Button@2.2.0
@@ -276,16 +272,12 @@ Screens:
                         Notify("Inspection abandonnée.", NotificationType.Success),
                         Notify("Abandon impossible : " & FirstError.Message, NotificationType.Error)
                     );
+                    // 1. SharePoint (délégué, colonne indexée) : inspections en brouillon ou en cours, tous utilisateurs (max. 2000)
+                    ClearCollect(colEnCoursTous, Filter(INSPECTIONS, StatutInspection.Value = "BROUILLON" || StatutInspection.Value = "EN_COURS"));
+                    // 2. Application : celles de l'utilisateur connecté (comparaison insensible à la casse)
                     ClearCollect(
                         colInspectionsAReprendre,
-                        Sort(
-                            Filter(
-                                Filter(INSPECTIONS, StatutInspection.Value = "BROUILLON" || StatutInspection.Value = "EN_COURS"),
-                                Lower(Inspecteur.Email) = Lower(User().Email)
-                            ),
-                            DateDerniereModification,
-                            SortOrder.Descending
-                        )
+                        Sort(Filter(colEnCoursTous, Lower(Inspecteur.Email) = Lower(User().Email)), DateDerniereModification, SortOrder.Descending)
                     );
                     UpdateContext({locInspectionAAbandonner: Blank(), locOperationEnCours: false})
             - btnAbandonAnnuler:
