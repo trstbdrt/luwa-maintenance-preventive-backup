@@ -9,3 +9,4 @@ D007,2026-10-08,Suppression,Aucune suppression autorisée archivage uniquement
 D008,2026-10-08,App2,Validation chef de projet avant création des actions
 D009,2026-10-08,Export,Export structuré Excel CSV ZIP plus photos
 D029,2026-10-09,Ouvrages,Clé CleOuvrage (majuscules sans espaces) et dossiers par ouvrage avec rapport PDF + CSV (PAU-07)
+D030,2026-10-09,Export,Export à la demande par période (CSV ; + Photos optionnel) dans 05_Exports - ZIP via Télécharger SharePoint

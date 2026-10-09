@@ -264,3 +264,24 @@ Sur l'écran d'identification, pour un même ouvrage et un même type d'inspecti
 - Deux ouvrages ne différant que par un espace seraient confondus : exclu par la convention de nommage `E100 511`.
 - Le dossier porte l'identifiant connu à la soumission (TMP-… tant que PAU-04 n'existe pas).
 - Les photos d'une inaccessibilité (SYS_001, lot suivant) devront être envoyées avant le passage au statut INACCESSIBLE.
+
+---
+
+# DEC-30 — Export structuré (PAU-01)
+
+## Décision
+
+- Export **à la demande** par le flux `LUWA_Export` (déclenchement manuel) : période sur `DateSoumission` (heure belge),
+  statuts TERMINE / INACCESSIBLE / ARCHIVE ; relançable à volonté, par plusieurs personnes ; pas de marquage « exporté ».
+- Résultat dans `05_Exports/Export <début> au <fin> - <horodatage>/` : `Inspections.csv`, `Reponses.csv`, `Photos.csv`
+  et, en option, `Photos/` (copie des photos). Le ZIP est obtenu par la fonction **Télécharger** de SharePoint.
+- **CSV au lieu de Export.xlsx** (écart à la spécification § 20, validé) : `;`, UTF-8 avec BOM, ouvrable directement dans
+  Excel ; générer un classeur ligne par ligne serait trop lent (≈ 5 000 réponses/jour) et le CSV est le format le plus simple
+  à réintégrer.
+- Les réponses exportées sont celles figées à la soumission (`RapportCSV`, DEC-29) : codes **et** libellés.
+- Index ajouté sur `INSPECTIONS.DateSoumission` (filtre au-delà de 5 000 éléments).
+
+## Conséquences
+
+- Les inspections soumises avant le lot 4 n'ont pas de réponses dans l'export (pas de `RapportCSV`).
+- Le flux utilise les variables d'environnement : portable avec la solution.
