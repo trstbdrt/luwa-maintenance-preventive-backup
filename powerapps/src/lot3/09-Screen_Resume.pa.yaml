@@ -47,7 +47,7 @@ Screens:
       - lblResTitre:
           Control: Label@2.5.1
           Properties:
-            Text: ="Récapitulatif — " & gblInspectionID & "  —  " & gblNomOuvrage
+            Text: ="Récapitulatif — " & gblNomOuvrage
             X: =40
             Y: =16
             Width: =1000
@@ -169,7 +169,7 @@ Screens:
                       IfError(SaveData(colReponses, "luwa_reponses"); true, false);
                       IfError(SaveData(colPhotos, "luwa_photos"); true, false);
                       Set(gblQuestionCible, "");
-                      Notify("Inspection " & gblInspectionID & " soumise.", NotificationType.Success);
+                      Notify("Inspection " & gblNomOuvrage & " soumise.", NotificationType.Success);
                       Navigate(Screen_Home, ScreenTransition.None),
                       Notify("Soumission impossible : " & FirstError.Message, NotificationType.Error)
                   );
