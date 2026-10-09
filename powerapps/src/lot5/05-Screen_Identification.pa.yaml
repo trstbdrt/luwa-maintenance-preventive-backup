@@ -163,7 +163,7 @@ Screens:
       - lblIdentDerniere:
           Control: Label@2.5.1
           Properties:
-            Visible: =locRechercheFaite
+            Visible: =locRechercheFaite && !IsBlank(locDerniereInspection)
             Text: |-
               =With(
                   {
@@ -178,7 +178,7 @@ Screens:
                   },
                   If(
                       IsBlank(locDerniereInspection),
-                      "Aucun historique d'inspection " & Lower(gblTypeInspection) & " pour l'ouvrage " & gblNomOuvrage & ".",
+                      "",
                       "Dernière inspection " & Lower(gblTypeInspection) & " : "
                       & Switch(
                           locDerniereInspection.StatutInspection.Value,
@@ -339,6 +339,18 @@ Screens:
             Width: =520
             Height: =40
             FontWeight: =FontWeight.Semibold
+      - lblIdentHistoriqueVide:
+          Control: Label@2.5.1
+          Properties:
+            Visible: =locRechercheFaite && IsEmpty(colHistoriqueOuvrage)
+            Text: ="Aucune inspection enregistrée pour cet ouvrage."
+            Size: =13
+            Italic: =true
+            Color: =RGBA(120, 120, 120, 1)
+            X: =800
+            Y: =156
+            Width: =520
+            Height: =36
       - galIdentHistorique:
           Control: Gallery@2.15.0
           Variant: BrowseLayout_Vertical_TwoTextOneImageVariant_ver5.0
