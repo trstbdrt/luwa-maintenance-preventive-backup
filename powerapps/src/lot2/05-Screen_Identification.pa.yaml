@@ -7,7 +7,6 @@ Screens:
         Clear(colHistoriqueOuvrage);
         UpdateContext({
             locDerniereInspection: Blank(),
-            locInspectionEnCoursExiste: false,
             locRechercheFaite: false,
             locAfficherPanneauInaccessible: false,
             locOperationEnCours: false,
@@ -55,13 +54,6 @@ Screens:
               );
               UpdateContext({
                   locDerniereInspection: First(Filter(colHistoriqueOuvrage, TypeInspection.Value = gblTypeInspection)),
-                  locInspectionEnCoursExiste: !IsEmpty(
-                      Filter(
-                          colHistoriqueOuvrage,
-                          TypeInspection.Value = gblTypeInspection
-                              && (StatutInspection.Value = "BROUILLON" || StatutInspection.Value = "EN_COURS")
-                      )
-                  ),
                   locRechercheFaite: true
               });
               // DEC-28 : une seule inspection en cours par personne (même ouvrage, même type)
