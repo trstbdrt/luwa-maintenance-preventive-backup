@@ -21,6 +21,20 @@ d'INSPECTIONS). Le flux se contente de créer les fichiers, de déplacer les pho
 Connecteurs : SharePoint et OneDrive for Business (standard, pas de licence premium).
 Le compte qui crée le flux doit avoir un OneDrive (fichier HTML temporaire pour la conversion en PDF).
 
+
+## 0. Portabilité (variables d'environnement)
+
+Dans **toutes** les actions SharePoint, ne pas choisir le site ni la liste dans la liste déroulante :
+⌄ > **Enter custom value** > Dynamic content > **Environment variables** :
+
+| Champ | Variable |
+|------|------|
+| Site Address (Current / Destination) | **LUWA Site SharePoint** |
+| List Name (déclencheur) | **INSPECTIONS** |
+| Library Name / List or Library | **PHOTOS_INSPECTIONS** |
+
+Ainsi, sur un autre site, seules les valeurs des variables changent à l'import de la solution.
+
 ---
 
 ## 1. Création
@@ -135,7 +149,7 @@ Branche **If yes** : SharePoint **Send an HTTP request to SharePoint** :
 |------|------|
 | Site Address | même site |
 | Method | `POST` |
-| Uri | Expression : `concat('_api/web/GetFolderByServerRelativeUrl(''/sites/LuwaMaintenancePreventiveBackup/',first(body('PhotosInspection')?['value'])?['{Path}'],''')')` |
+| Uri | Expression : `concat('_api/web/GetFolderByServerRelativeUrl(''',uriPath(<LUWA Site SharePoint>),'/',first(body('PhotosInspection')?['value'])?['{Path}'],''')')` — insérer la variable **LUWA Site SharePoint** depuis Dynamic content à l'emplacement indiqué |
 
 (`{Path}` = dossier d'origine de la première photo, ex. `PHOTOS_INSPECTIONS/_EN_COURS/<GUID>/` — nom sans espace.)
 | Headers | `X-HTTP-Method` : `DELETE` — `IF-MATCH` : `*` |

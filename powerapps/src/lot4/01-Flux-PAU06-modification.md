@@ -14,3 +14,10 @@ Action **Create file** (SharePoint) > champ **Folder Path** :
 Le dossier `_EN_COURS` est créé automatiquement au premier envoi. Rien d'autre ne change (entrées, propriétés, réponse).
 
 Save. L'application n'a pas besoin d'être modifiée pour ce changement.
+
+## Portabilité (variables d'environnement)
+
+- Create file > Site Address : **LUWA Site SharePoint** (⌄ > Enter custom value > Environment variables).
+- Update file properties > Site Address : **LUWA Site SharePoint** ; Library Name : **PHOTOS_INSPECTIONS**.
+
+La variable du site a été renommée « LUWA Site SharePoint » (nom technique `devwvn_shared_sharepointonline_f493…`, inchangé).
