@@ -154,11 +154,21 @@ Screens:
           Properties:
             Visible: =!IsBlank(gblInspectionConsultee)
             Items: |-
-              =Sort(
-                  AddColumns(
-                      colReponsesConsultees,
-                      Ordre, LookUp(colQuestions, QuestionCode = ThisRecord.QuestionCode).OrdreAffichage,
-                      LibelleQuestion, LookUp(colQuestions, QuestionCode = ThisRecord.QuestionCode).Libelle
+              =// Alias wR : dans LookUp, ThisRecord désignerait la question et non la réponse
+              Sort(
+                  ForAll(
+                      colReponsesConsultees As wR,
+                      With(
+                          {wQ: LookUp(colQuestions, QuestionCode = wR.QuestionCode)},
+                          {
+                              QuestionCode: wR.QuestionCode,
+                              Valeur: wR.Valeur,
+                              ValeurNumerique: wR.ValeurNumerique,
+                              Commentaire: wR.Commentaire,
+                              Ordre: wQ.OrdreAffichage,
+                              LibelleQuestion: Coalesce(wQ.Libelle, wR.QuestionCode)
+                          }
+                      )
                   ),
                   Ordre
               )
