@@ -59,7 +59,7 @@ Screens:
               =gblTypeInspection & "  ·  " & gblInspection.StatutInspection.Value
               & "  ·  créée le " & Text(gblInspection.DateCreation, "dd/mm/yyyy hh:mm")
             X: =40
-            Y: =66
+            Y: =62
             Width: =900
             Height: =32
       - lblInspEtatSynchro:
@@ -108,10 +108,10 @@ Screens:
           Properties:
             Items: =colQuestionsAffichees
             X: =40
-            Y: =104
+            Y: =100
             Width: =1286
-            Height: =570
-            TemplateSize: =150
+            Height: =580
+            TemplateSize: =92
             TemplatePadding: =0
           Children:
             - lblQGroupe:
@@ -125,7 +125,8 @@ Screens:
                   X: =0
                   Y: =0
                   Width: =Parent.TemplateWidth
-                  Height: =34
+                  Height: =22
+                  Size: =11
                   PaddingLeft: =16
             - lblQLibelle:
                 Control: Label@2.5.1
@@ -134,9 +135,9 @@ Screens:
                     =ThisItem.Libelle & If(ThisItem.ObligatoireEff, "  *", "")
                   FontWeight: =FontWeight.Semibold
                   X: =If(IsBlank(ThisItem.QuestionParent), 16, 56)
-                  Y: =If(ThisItem.DebutGroupe, 40, 6)
-                  Width: =Parent.TemplateWidth - 200
-                  Height: =32
+                  Y: =If(ThisItem.DebutGroupe, 24, 6)
+                  Width: =Parent.TemplateWidth * 0.55
+                  Height: =28
             - radQReponse:
                 Control: Classic/Radio
                 Properties:
@@ -144,12 +145,14 @@ Screens:
                   Items: =Split(Coalesce(ThisItem.LibellesValeurs, ThisItem.ValeursPossibles), "|")
                   Default: |-
                     =With({wCodes: Split(ThisItem.ValeursPossibles, "|"), wLibs: Split(Coalesce(ThisItem.LibellesValeurs, ThisItem.ValeursPossibles), "|"), wV: LookUp(colReponses, QuestionCode = ThisItem.QuestionCode).Valeur}, With({wPos: First(Filter(Sequence(CountRows(wCodes)), Index(wCodes, Value).Value = wV)).Value}, If(IsBlank(wPos), wV, Index(wLibs, wPos).Value)))
-                  Size: =14
+                  Size: =13
+                  PaddingTop: =0
+                  PaddingBottom: =0
                   Layout: =Layout.Horizontal
                   X: =If(IsBlank(ThisItem.QuestionParent), 16, 56)
-                  Y: =If(ThisItem.DebutGroupe, 74, 40)
-                  Width: =Parent.TemplateWidth - 220
-                  Height: =52
+                  Y: =If(ThisItem.DebutGroupe, 50, 38)
+                  Width: =Parent.TemplateWidth - 140
+                  Height: =40
                   OnChange: |-
                     =With(
                         {wCode: ThisItem.QuestionCode, wVal: With({wCodes: Split(ThisItem.ValeursPossibles, "|"), wLibs: Split(Coalesce(ThisItem.LibellesValeurs, ThisItem.ValeursPossibles), "|"), wL: Self.Selected.Value}, With({wPos: First(Filter(Sequence(CountRows(wLibs)), Index(wLibs, Value).Value = wL)).Value}, If(IsBlank(wPos), wL, Index(wCodes, wPos).Value))), wEx: LookUp(colReponses, QuestionCode = ThisItem.QuestionCode)},
@@ -171,9 +174,9 @@ Screens:
                   Default: |-
                     =LookUp(colReponses, QuestionCode = ThisItem.QuestionCode).Valeur = First(Split(ThisItem.ValeursPossibles, "|")).Value
                   X: =If(IsBlank(ThisItem.QuestionParent), 16, 56)
-                  Y: =If(ThisItem.DebutGroupe, 74, 40)
+                  Y: =If(ThisItem.DebutGroupe, 50, 38)
                   Width: =300
-                  Height: =44
+                  Height: =40
                   OnCheck: |-
                     =With(
                         {wCode: ThisItem.QuestionCode, wVal: First(Split(ThisItem.ValeursPossibles, "|")).Value, wEx: LookUp(colReponses, QuestionCode = ThisItem.QuestionCode)},
@@ -205,9 +208,9 @@ Screens:
                     =With({wN: LookUp(colReponses, QuestionCode = ThisItem.QuestionCode).ValeurNumerique}, If(IsBlank(wN), "", Text(wN)))
                   HintText: ="Valeur en mm"
                   X: =If(IsBlank(ThisItem.QuestionParent), 16, 56)
-                  Y: =If(ThisItem.DebutGroupe, 74, 40)
+                  Y: =If(ThisItem.DebutGroupe, 50, 38)
                   Width: =220
-                  Height: =44
+                  Height: =40
                   OnChange: |-
                     =With(
                         {
@@ -231,9 +234,9 @@ Screens:
                   Visible: =ThisItem.TypeQuestion = "NUMERIQUE"
                   Text: ="OK"
                   X: =If(IsBlank(ThisItem.QuestionParent), 16, 56) + 232
-                  Y: =If(ThisItem.DebutGroupe, 74, 40)
+                  Y: =If(ThisItem.DebutGroupe, 50, 38)
                   Width: =80
-                  Height: =44
+                  Height: =40
                   OnSelect: =false
             - lblQCalcul:
                 Control: Label@2.5.1
@@ -250,9 +253,9 @@ Screens:
                     )
                   Color: =If(ThisItem.CalculBloque, RGBA(196, 43, 28, 1), RGBA(32, 31, 30, 1))
                   X: =If(IsBlank(ThisItem.QuestionParent), 16, 56)
-                  Y: =If(ThisItem.DebutGroupe, 74, 40)
+                  Y: =If(ThisItem.DebutGroupe, 50, 38)
                   Width: =700
-                  Height: =44
+                  Height: =40
             - txtQTexte:
                 Control: Classic/TextInput@2.3.2
                 Properties:
@@ -260,9 +263,9 @@ Screens:
                   Mode: =TextMode.MultiLine
                   Default: =LookUp(colReponses, QuestionCode = ThisItem.QuestionCode).Valeur
                   X: =If(IsBlank(ThisItem.QuestionParent), 16, 56)
-                  Y: =If(ThisItem.DebutGroupe, 74, 40)
-                  Width: =Parent.TemplateWidth - 220
-                  Height: =66
+                  Y: =If(ThisItem.DebutGroupe, 50, 38)
+                  Width: =Parent.TemplateWidth - 140
+                  Height: =40
                   OnChange: |-
                     =With(
                         {wCode: ThisItem.QuestionCode, wVal: Self.Text, wEx: LookUp(colReponses, QuestionCode = ThisItem.QuestionCode)},
@@ -284,9 +287,9 @@ Screens:
                     ="Photos : disponibles au lot 3 (minimum requis : " & ThisItem.PhotosMin & ")"
                   Italic: =true
                   X: =If(IsBlank(ThisItem.QuestionParent), 16, 56)
-                  Y: =If(ThisItem.DebutGroupe, 74, 40)
+                  Y: =If(ThisItem.DebutGroupe, 50, 38)
                   Width: =700
-                  Height: =44
+                  Height: =40
             - lblQCommentaire:
                 Control: Label@2.5.1
                 Properties:
@@ -307,10 +310,11 @@ Screens:
                     )
                   Size: =12
                   Italic: =true
-                  X: =If(IsBlank(ThisItem.QuestionParent), 16, 56)
-                  Y: =If(ThisItem.DebutGroupe, 118, 108)
-                  Width: =Parent.TemplateWidth - 220
+                  X: =Parent.TemplateWidth * 0.55
+                  Y: =If(ThisItem.DebutGroupe, 24, 6)
+                  Width: =Parent.TemplateWidth * 0.45 - 80
                   Height: =28
+                  Align: =Align.Right
             - icoQCommentaire:
                 Control: Classic/Icon@2.5.0
                 Properties:
@@ -322,10 +326,10 @@ Screens:
                         RGBA(196, 43, 28, 1),
                         RGBA(15, 108, 189, 1)
                     )
-                  X: =Parent.TemplateWidth - 120
-                  Y: =If(ThisItem.DebutGroupe, 74, 40)
-                  Width: =44
-                  Height: =44
+                  X: =Parent.TemplateWidth - 64
+                  Y: =If(ThisItem.DebutGroupe, 50, 38)
+                  Width: =40
+                  Height: =40
                   OnSelect: |-
                     =UpdateContext({locQuestionActive: ThisItem.QuestionCode, locAfficherPanneauCommentaire: true});
                     Reset(txtInspCommentaire)
