@@ -428,7 +428,8 @@ Screens:
                                   wP.Source,
                                   User().Email
                               );
-                              Patch(colPhotos, LookUp(colPhotos, PhotoLocaleID = wP.PhotoLocaleID), {EtatSynchro: "ENVOYEE"}),
+                              Patch(colPhotos, LookUp(colPhotos, PhotoLocaleID = wP.PhotoLocaleID), {EtatSynchro: "ENVOYEE"});
+                              true,
                               false
                           )
                       );
