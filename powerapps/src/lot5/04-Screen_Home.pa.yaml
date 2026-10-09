@@ -64,10 +64,11 @@ Screens:
           Properties:
             Visible: =locRecupDisponible
             Text: |-
-              ="⚠ L'inspection " & First(colContexteLocal).NomOuvrage & " a "
+              ="⚠ Inspection " & First(colContexteLocal).NomOuvrage & " pas encore envoyée : "
               & CountRows(Filter(colReponsesLocales, EtatSynchro <> "SYNCHRONISEE")) & " réponse(s) et "
               & CountRows(Filter(colPhotosLocales, EtatSynchro = "EN_ATTENTE"))
-              & " photo(s) non enregistrée(s), gardées sur cette tablette."
+              & " photo(s) sont seulement sur cette tablette."
+              & Char(10) & "Envoyez-les avant toute autre inspection, sinon elles risquent d'être perdues."
             Color: =RGBA(176, 96, 0, 1)
             Fill: =RGBA(255, 244, 222, 1)
             FontWeight: =FontWeight.Semibold
@@ -75,18 +76,20 @@ Screens:
             X: =40
             Y: =128
             Width: =1000
-            Height: =64
+            Height: =76
       - btnHomeRecup:
           Control: Classic/Button@2.2.0
           Properties:
             Visible: =locRecupDisponible
-            Text: ="Récupérer et enregistrer"
+            Text: ="Envoyer maintenant"
+            Size: =16
+            FontWeight: =FontWeight.Semibold
             Fill: =RGBA(202, 80, 16, 1)
             HoverFill: =RGBA(170, 66, 12, 1)
             X: =1056
             Y: =128
             Width: =270
-            Height: =64
+            Height: =76
             OnSelect: |-
               =With(
                   {wC: First(colContexteLocal)},
@@ -108,7 +111,7 @@ Screens:
             RadiusBottomLeft: =12
             RadiusBottomRight: =12
             X: =40
-            Y: =If(locRecupDisponible, 214, 150)
+            Y: =If(locRecupDisponible, 226, 150)
             Width: =628
             Height: =160
             DisplayMode: =If(locRecupDisponible, DisplayMode.Disabled, DisplayMode.Edit)

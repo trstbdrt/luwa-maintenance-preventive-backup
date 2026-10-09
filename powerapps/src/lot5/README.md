@@ -60,3 +60,11 @@ I3 avec ma propre inspection en cours (DEC-28) → cette inspection devient inac
 - bandeaux « Hors connexion » et « inspection non enregistrée sur la tablette » (avec « Récupérer et enregistrer ») en haut.
 
 `05-Screen_Identification.pa.yaml` : « Retour » ramène à l'accueil (btnIdentRetour.OnSelect = `Navigate(Screen_Home, ScreenTransition.None)`).
+
+## Inspection non envoyée (5.0)
+
+- Accueil : bandeau « ⚠ Inspection X pas encore envoyée : n réponse(s) et p photo(s) sont seulement sur cette tablette.
+  Envoyez-les avant toute autre inspection, sinon elles risquent d'être perdues. » + bouton « Envoyer maintenant ».
+- Une seule inspection peut être dans ce cas (une seule copie locale ; les tuiles sont bloquées tant qu'elle n'est pas envoyée).
+- « Envoyer maintenant » rouvre l'inspection et l'enregistre aussitôt dans SharePoint si le réseau est là (`gblEnvoiAuto`).
+- `02-App.OnStart.fx` (lot 5) : ajout `Set(gblEnvoiAuto, false)` ; suppression de `colPhotosConsultees` (inutilisée).

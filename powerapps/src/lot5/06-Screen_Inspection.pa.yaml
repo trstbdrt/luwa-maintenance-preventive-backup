@@ -25,7 +25,8 @@ Screens:
                 // Copie locale récupérée (hors connexion)
                 ClearCollect(colReponses, colReponsesLocales);
                 ClearCollect(colPhotos, colPhotosLocales);
-                Set(gblRepriseLocale, false),
+                Set(gblRepriseLocale, false);
+                Set(gblEnvoiAuto, true),
                 // Relecture SharePoint (rafraîchissement forcé pour éviter un résultat mis en cache)
                 Refresh(REPONSES);
                 Refresh(PHOTOS_INSPECTIONS);
@@ -66,7 +67,17 @@ Screens:
         UpdateContext({locQuestionActive: "", locAfficherPanneauCommentaire: false, locAfficherPanneauPhotos: false, locEnregistrementEnCours: false, locQuitterApresEnregistrement: false, locAllerResume: false, locCamera: 0, locEnvoiPhotosEnCours: false});
         Reset(galInspQuestions);
         Set(gblEvaluationEnCours, false);
-        Select(btnInspEvaluer)
+        Select(btnInspEvaluer);
+        // Récupération depuis l'accueil (« Envoyer maintenant ») : envoi immédiat vers SharePoint si le réseau est là
+        If(
+            gblEnvoiAuto,
+            Set(gblEnvoiAuto, false);
+            If(
+                Connection.Connected,
+                Select(btnInspEnregistrer),
+                Notify("Pas de réseau : l'inspection reste sur la tablette. Touchez « Enregistrer » dès que le réseau revient.", NotificationType.Warning)
+            )
+        )
     Children:
       - lblInspTitre:
           Control: Label@2.5.1
