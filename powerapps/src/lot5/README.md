@@ -39,3 +39,13 @@
 - `05-Screen_Identification.pa.yaml` : plus d'identifiant dans « Déjà inspecté », « inspection en cours » et l'inaccessibilité ;
   historique de l'ouvrage : « date · Poteau » / « statut · inspecteur ».
 - `07-Screen_History.pa.yaml` : mêmes lignes ; en-tête du détail « ouvrage · type · statut » (statuts en français).
+
+## Ouvrage inaccessible : photos SYS_001 (5.0)
+
+`05-Screen_Identification.pa.yaml` : le panneau « Ouvrage inaccessible » comporte une caméra (toucher l'image),
+« Changer de caméra » et les miniatures (suppression possible). À la validation, les photos sont envoyées **avant** le
+passage au statut INACCESSIBLE, pour que le flux PAU-07 les range avec le rapport. Sans réseau : message, rien n'est créé,
+nouvel essai possible. Photos facultatives, 10 au maximum ; nombre de photos indiqué dans le PDF et le CSV.
+
+Tests : I1 inaccessible sans photo (comme avant) ; I2 avec 2 photos → dossier de l'ouvrage : PDF, CSV, 2 photos SYS_001 ;
+I3 avec ma propre inspection en cours (DEC-28) → cette inspection devient inaccessible, ses photos et les photos SYS_001 rangées ensemble.

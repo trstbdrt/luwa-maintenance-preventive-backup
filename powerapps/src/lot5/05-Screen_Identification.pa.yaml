@@ -327,7 +327,8 @@ Screens:
               =If(lblIdentCleSaisie.Text <> gblCleOuvrage, DisplayMode.Disabled, DisplayMode.Edit)
             OnSelect: |-
               =Reset(txtIdentCommentaireInaccessible);
-              UpdateContext({locAfficherPanneauInaccessible: true})
+              ClearCollect(colPhotosInacc, Filter(colPhotos, false));
+              UpdateContext({locAfficherPanneauInaccessible: true, locCameraInacc: 0})
       - lblIdentHistoriqueTitre:
           Control: Label@2.5.1
           Properties:
@@ -483,10 +484,10 @@ Screens:
           Properties:
             Visible: =locAfficherPanneauInaccessible
             Fill: =RGBA(255, 255, 255, 1)
-            X: =283
-            Y: =134
-            Width: =800
-            Height: =500
+            X: =133
+            Y: =74
+            Width: =1100
+            Height: =620
           Children:
             - lblInaccTitre:
                 Control: Label@2.5.1
@@ -496,7 +497,7 @@ Screens:
                     & If(IsBlank(locMonInspectionEnCours), "", "  (votre inspection en cours sera déclarée inaccessible)")
                   X: =30
                   Y: =20
-                  Width: =740
+                  Width: =1040
                   Height: =50
                   Size: =20
                   FontWeight: =FontWeight.Semibold
@@ -506,7 +507,7 @@ Screens:
                   Text: ="Commentaire (obligatoire)"
                   X: =30
                   Y: =80
-                  Width: =740
+                  Width: =520
                   Height: =36
             - txtIdentCommentaireInaccessible:
                 Control: Classic/TextInput@2.3.2
@@ -515,19 +516,91 @@ Screens:
                   Mode: =TextMode.MultiLine
                   X: =30
                   Y: =120
-                  Width: =740
-                  Height: =180
+                  Width: =520
+                  Height: =200
             - lblInaccPhotos:
                 Control: Label@2.5.1
                 Properties:
                   Text: |-
-                    ="Photos (facultatives) : disponibles au lot 3, avec l'envoi des fichiers."
-                  X: =30
-                  Y: =310
-                  Width: =740
+                    ="Photos (facultatives) : touchez l'image pour photographier"
+                  X: =580
+                  Y: =80
+                  Width: =490
                   Height: =36
-                  Size: =12
-                  Italic: =true
+            - camInaccPhoto:
+                Control: Camera
+                Properties:
+                  Camera: =locCameraInacc
+                  X: =580
+                  Y: =120
+                  Width: =400
+                  Height: =300
+                  OnSelect: |-
+                    =// SYS_001 : photos de l'ouvrage inaccessible, envoyées à la validation (avant le changement de statut)
+                    If(
+                        CountRows(colPhotosInacc) >= 10,
+                        Notify("Nombre maximal de photos atteint (10).", NotificationType.Warning),
+                        With(
+                            {wNow: Now(), wSrc: Substitute(JSON(Self.Photo, JSONFormat.IncludeBinaryData), Char(34), "")},
+                            Collect(
+                                colPhotosInacc,
+                                {
+                                    PhotoLocaleID: Text(GUID()),
+                                    QuestionCode: "SYS_001",
+                                    Source: wSrc,
+                                    NomFichier: "SYS_001_" & Text(wNow, "yyyymmdd_hhmmss") & "_" & Left(Text(GUID()), 4)
+                                        & If(StartsWith(wSrc, "data:image/png"), ".png", ".jpg"),
+                                    DatePhoto: wNow,
+                                    EtatSynchro: "EN_ATTENTE"
+                                }
+                            )
+                        );
+                        Notify("Photo " & CountRows(colPhotosInacc) & " ajoutée.", NotificationType.Success, 1500)
+                    )
+            - btnInaccCamera:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  Text: ="🔄  Changer de caméra"
+                  Fill: =RGBA(255, 255, 255, 1)
+                  Color: =RGBA(15, 108, 189, 1)
+                  BorderColor: =RGBA(15, 108, 189, 1)
+                  BorderThickness: =1
+                  X: =580
+                  Y: =430
+                  Width: =260
+                  Height: =44
+                  OnSelect: |-
+                    =UpdateContext({locCameraInacc: If(locCameraInacc = 0, 1, 0)})
+            - galInaccPhotos:
+                Control: Gallery@2.15.0
+                Variant: BrowseLayout_Horizontal_TwoTextOneImageVariant_ver5.0
+                Properties:
+                  Items: =colPhotosInacc
+                  X: =30
+                  Y: =334
+                  Width: =520
+                  Height: =140
+                  TemplateSize: =140
+                Children:
+                  - imgInaccPhoto:
+                      Control: Image@2.2.3
+                      Properties:
+                        Image: =ThisItem.Source
+                        X: =4
+                        Y: =4
+                        Width: =130
+                        Height: =100
+                  - icoInaccPhotoSupprimer:
+                      Control: Classic/Icon@2.5.0
+                      Properties:
+                        Visible: =ThisItem.EtatSynchro = "EN_ATTENTE"
+                        Icon: =Icon.Trash
+                        Color: =RGBA(196, 43, 28, 1)
+                        X: =50
+                        Y: =104
+                        Width: =36
+                        Height: =32
+                        OnSelect: =Remove(colPhotosInacc, ThisItem)
             - lblInaccRapportHTML:
                 Control: Label@2.5.1
                 Properties:
@@ -538,7 +611,8 @@ Screens:
                     & "<h1>Inspection " & Lower(gblTypeInspection) & " — " & Substitute(Substitute(Substitute(gblNomOuvrage, "&", "&amp;"), "<", "&lt;"), ">", "&gt;") & "</h1>"
                     & "<table class=""info""><tr><td>Statut</td><td><b>Ouvrage inaccessible</b></td></tr>"
                     & "<tr><td>Inspecteur</td><td>" & Substitute(Substitute(Substitute(User().FullName, "&", "&amp;"), "<", "&lt;"), ">", "&gt;") & "</td></tr>"
-                    & "<tr><td>Date</td><td>{{DATE}}</td></tr><tr><td>Identifiant</td><td>{{ID}}</td></tr></table>"
+                    & "<tr><td>Date</td><td>{{DATE}}</td></tr><tr><td>Identifiant</td><td>{{ID}}</td></tr>"
+                    & "<tr><td>Photos</td><td>" & CountRows(colPhotosInacc) & " (dans ce dossier, nommées SYS_001_…)</td></tr></table>"
                     & "<table><tr><th>Motif</th></tr><tr><td>" & Substitute(Substitute(Substitute(Trim(txtIdentCommentaireInaccessible.Text), "&", "&amp;"), "<", "&lt;"), ">", "&gt;") & "</td></tr></table>"
                     & "</body></html>"
                   X: =30
@@ -552,7 +626,7 @@ Screens:
                   Text: |-
                     ="InspectionID;Ouvrage;Type;Ordre;Groupe;QuestionCode;Question;ValeurCode;Reponse;Commentaire;NbPhotos" & Char(13) & Char(10)
                     & """{{ID}}"";" & """" & Substitute(gblNomOuvrage, """", """""") & """" & ";" & gblTypeInspection & ";0;SYSTEME;SYS_001;""Ouvrage inaccessible"";"""";"""";"
-                    & """" & Substitute(Trim(txtIdentCommentaireInaccessible.Text), """", """""") & """" & ";0"
+                    & """" & Substitute(Trim(txtIdentCommentaireInaccessible.Text), """", """""") & """" & ";" & CountRows(colPhotosInacc)
                   X: =50
                   Y: =480
                   Width: =10
@@ -562,7 +636,7 @@ Screens:
                 Properties:
                   Text: =If(IsBlank(locInspectionSansCommentaire), "Valider", "Réessayer")
                   X: =30
-                  Y: =410
+                  Y: =530
                   Width: =240
                   Height: =60
                   DisplayMode: |-
@@ -573,9 +647,46 @@ Screens:
                     )
                   OnSelect: |-
                     =UpdateContext({locOperationEnCours: true});
+                    // 0. Identifiant de l'inspection puis envoi des photos SYS_001, AVANT le statut INACCESSIBLE
+                    //    (le flux PAU-07 range les fichiers dès que le statut change)
+                    If(
+                        IsBlank(locInspectionSansCommentaire),
+                        If(
+                            !IsBlank(locMonInspectionEnCours),
+                            Set(gblInspectionGUID, locMonInspectionEnCours.InspectionGUID);
+                            Set(gblInspectionID, locMonInspectionEnCours.InspectionID),
+                            // nouvelle inspection ; après un envoi partiel de photos, on garde le même identifiant
+                            IsBlank(LookUp(colPhotosInacc, EtatSynchro = "ENVOYEE")),
+                            Set(gblInspectionGUID, Text(GUID()));
+                            Set(gblInspectionID, "TMP-" & Left(gblInspectionGUID, 8))
+                        );
+                        ClearCollect(colPhotosInaccAEnvoyer, Filter(colPhotosInacc, EtatSynchro = "EN_ATTENTE"));
+                        ForAll(
+                            colPhotosInaccAEnvoyer As wP,
+                            IfError(
+                                LUWA_EnvoyerPhoto.Run(
+                                    gblInspectionGUID,
+                                    "SYS_001",
+                                    gblNomOuvrage,
+                                    wP.NomFichier,
+                                    Text(DateAdd(wP.DatePhoto, TimeZoneOffset(wP.DatePhoto), TimeUnit.Minutes), "yyyy-mm-ddThh:mm:ssZ"),
+                                    "COMPRESSEE",
+                                    wP.Source,
+                                    User().Email
+                                );
+                                Patch(colPhotosInacc, LookUp(colPhotosInacc, PhotoLocaleID = wP.PhotoLocaleID), {EtatSynchro: "ENVOYEE"});
+                                true,
+                                false
+                            )
+                        );
+                        If(
+                            !IsEmpty(Filter(colPhotosInacc, EtatSynchro = "EN_ATTENTE")),
+                            Notify("Photos non envoyées : vérifiez le réseau puis cliquez à nouveau sur Valider.", NotificationType.Error)
+                        )
+                    );
                     // 1. Création de l'inspection INACCESSIBLE (sauf si elle existe déjà après un échec du commentaire)
                     If(
-                        IsBlank(locInspectionSansCommentaire) && !IsBlank(locMonInspectionEnCours),
+                        IsEmpty(Filter(colPhotosInacc, EtatSynchro = "EN_ATTENTE")) && IsBlank(locInspectionSansCommentaire) && !IsBlank(locMonInspectionEnCours),
                         // DEC-28 option A : mon inspection en cours devient INACCESSIBLE (pas de seconde inspection)
                         Set(gblInspectionGUID, locMonInspectionEnCours.InspectionGUID);
                         Set(gblInspectionID, locMonInspectionEnCours.InspectionID);
@@ -598,9 +709,7 @@ Screens:
                             )
                         );
                         If(!IsBlank(gblInspection), UpdateContext({locInspectionSansCommentaire: gblInspectionGUID})),
-                        IsBlank(locInspectionSansCommentaire),
-                        Set(gblInspectionGUID, Text(GUID()));
-                        Set(gblInspectionID, "TMP-" & Left(gblInspectionGUID, 8));
+                        IsEmpty(Filter(colPhotosInacc, EtatSynchro = "EN_ATTENTE")) && IsBlank(locInspectionSansCommentaire),
                         Set(
                             gblInspection,
                             IfError(
@@ -652,6 +761,8 @@ Screens:
                                     }
                                 );
                                 UpdateContext({locInspectionSansCommentaire: Blank()});
+                                Clear(colPhotosInacc);
+                                Set(gblInspectionGUID, "");
                                 Notify("Ouvrage déclaré inaccessible.", NotificationType.Success);
                                 Navigate(Screen_Home, ScreenTransition.None),
                                 Notify(
@@ -668,10 +779,11 @@ Screens:
                 Properties:
                   Text: ="Annuler"
                   X: =300
-                  Y: =410
+                  Y: =530
                   Width: =200
                   Height: =60
                   DisplayMode: |-
                     =If(IsBlank(locInspectionSansCommentaire), DisplayMode.Edit, DisplayMode.Disabled)
                   OnSelect: |-
-                    =UpdateContext({locAfficherPanneauInaccessible: false})
+                    =Clear(colPhotosInacc);
+                    UpdateContext({locAfficherPanneauInaccessible: false})
