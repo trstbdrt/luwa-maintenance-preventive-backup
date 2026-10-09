@@ -238,7 +238,7 @@ Screens:
             Text: ="Reprendre mon inspection"
             X: =40
             Y: =318
-            Width: =340
+            Width: =720
             Height: =70
             Size: =18
             DisplayMode: |-
@@ -261,7 +261,7 @@ Screens:
               )
             X: =40
             Y: =318
-            Width: =340
+            Width: =720
             Height: =70
             Size: =18
             DisplayMode: |-
@@ -306,12 +306,23 @@ Screens:
           Control: Classic/Button@2.2.0
           Properties:
             Visible: =locRechercheFaite
-            Text: ="Inspection inaccessible"
+            Text: ="Ouvrage inaccessible ?"
+            Size: =13
+            Underline: =true
+            Align: =Align.Right
+            Fill: =RGBA(0, 0, 0, 0)
+            Color: =RGBA(96, 94, 92, 1)
+            HoverFill: =RGBA(0, 0, 0, 0)
+            HoverColor: =RGBA(15, 108, 189, 1)
+            PressedFill: =RGBA(0, 0, 0, 0)
+            PressedColor: =RGBA(15, 108, 189, 1)
+            DisabledFill: =RGBA(0, 0, 0, 0)
+            DisabledColor: =RGBA(200, 200, 200, 1)
+            BorderThickness: =0
             X: =400
-            Y: =318
+            Y: =680
             Width: =360
-            Height: =70
-            Size: =18
+            Height: =50
             DisplayMode: |-
               =If(lblIdentCleSaisie.Text <> gblCleOuvrage, DisplayMode.Disabled, DisplayMode.Edit)
             OnSelect: |-
