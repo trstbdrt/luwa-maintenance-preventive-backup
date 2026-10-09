@@ -229,7 +229,7 @@ Screens:
           Variant: BrowseLayout_Horizontal_TwoTextOneImageVariant_ver5.0
           Properties:
             Visible: =!IsBlank(gblInspectionConsultee)
-            Items: =Filter(PHOTOS_INSPECTIONS, InspectionGUID = gblInspectionConsultee.InspectionGUID)
+            Items: =colPhotosConsultees
             X: =500
             Y: =540
             Width: =830
