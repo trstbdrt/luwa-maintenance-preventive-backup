@@ -559,6 +559,7 @@ et elle sera renvoyée au prochain enregistrement.
 | TERMINE | App 1 | Soumission réussie |
 | INACCESSIBLE | App 1 | Validation du panneau « Ouvrage inaccessible » |
 | ARCHIVE | Power Automate (PAU-03), jamais App 1 | TERMINE ou INACCESSIBLE, Aujourd'hui − DateDerniereModification > 183 jours (DEC-16, DEC-17) |
+| ABANDONNE | App 1, action manuelle depuis « Reprendre inspection » | BROUILLON ou EN_COURS abandonné par l'utilisateur, après confirmation (DEC-20) |
 
 ```
             Commencer                      1er enregistrement            Soumettre
@@ -635,7 +636,7 @@ Depuis le panneau « Ouvrage inaccessible » (Screen_Identification) :
 2. Création de l'inspection comme en 7.2 (étapes 1 à 4), avec StatutInspection = INACCESSIBLE.
 3. Création d'un élément REPONSES : QuestionCode = SYS_001, Valeur vide, Commentaire = `locCommentaireInaccessible`.
 4. Envoi des photos de `colPhotosInaccessible` (QuestionCode = SYS_001) dans `{InspectionGUID}`.
-5. DateSoumission : non renseignée (OQ-07 ouverte).
+5. DateSoumission = date de validation du panneau (DEC-18) ; l'inspection INACCESSIBLE est clôturée.
 6. Message de confirmation, réinitialisation du contexte, navigation vers Screen_Home.
 
 ## 7.7 Archivage
@@ -745,8 +746,8 @@ ou ce que les documents de référence ne tranchent pas.
 | # | Point | Impact | Référence |
 |------|------|------|------|
 | PA-1 | **Envoi des fichiers photo** : nécessite un flux Power Automate appelé depuis l'application (6.6) | PA-16 dépend de PAU-06 | Backlog PAU-06 |
-| PA-2 | **Délégation** : vérifier dans Studio l'absence d'avertissement de délégation sur les filtres INSPECTIONS (NomOuvrage, StatutInspection, Inspecteur), REPONSES et PHOTOS_INSPECTIONS (InspectionGUID). Le filtre sur la colonne Personne `Inspecteur` (DEC-09) est le plus sensible | Résultats incomplets au-delà de la limite de lignes de données | Index du schéma |
-| PA-3 | **Réponses des questions devenues masquées** : les documents ne précisent pas si une réponse saisie puis masquée (ex. POT_004 passe d'AVANCEE à BON) est conservée ou effacée. Le moteur l'ignore (5.4, 5.3 étape 5) ; son sort en base est à décider | Contenu de REPONSES et des exports | `docs/build/open-questions.md`, OQ-12 |
+| PA-2 | **Délégation** — principal risque technique, couvert par TEST-DELEGATION-001 : vérifier dans Studio l'absence d'avertissement de délégation sur les filtres INSPECTIONS (NomOuvrage, StatutInspection, Inspecteur), REPONSES et PHOTOS_INSPECTIONS (InspectionGUID). Le filtre sur la colonne Personne `Inspecteur` (DEC-09) est le plus sensible | Résultats incomplets au-delà de la limite de lignes de données | Index du schéma |
+| PA-3 | **Réponses des questions devenues masquées** : conservées dans REPONSES, ignorées par le moteur (5.4, 5.3 étape 5) — décidé | Aucune suppression lors d'un changement de visibilité | DEC-19 |
 | PA-4 | **Passage BROUILLON → EN_COURS** : « au moins une réponse » est implémenté comme « au moins une ligne dans `colReponses` » (réponse, commentaire seul ou PHOTO_CAPTURED) | Statut affiché | Spécification § 11 |
 | PA-5 | **Arrondi du calcul** : aucune règle d'arrondi n'est définie pour POT_004_2_C ; comparer la valeur non arrondie aux seuils de R120 / R131, arrondir seulement à l'affichage | Seuil de 30 % | R120, R131 |
 | PA-6 | **InspectionID temporaire affiché** : tant que PAU-04 n'est pas construit, les inspections conservent `TMP-…` | Affichage uniquement | DEC-13, DEC-14 |

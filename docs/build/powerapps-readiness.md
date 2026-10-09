@@ -148,10 +148,10 @@ Validé par : ____________________  Date : ____________
 | Décisions | DEC-01 à DEC-17 prises ; aucune question ouverte P1 | Non |
 | SharePoint | Construit et vérifié (`docs/build/sharepoint-build-report.md`) : listes, bibliothèque, 55 colonnes, 22 index, 34 questions, 29 règles | Non |
 | Envoi des fichiers photo | Dépend du flux PAU-06 (technical design § 6.6) | Non : bloque seulement l'envoi effectif des photos (PA-16), pas le développement des écrans |
-| Permissions des techniciens (§ 2.4) | Non configurées ; soumises à l'accord explicite du propriétaire du site | Non : nécessaires avant les tests avec des comptes techniciens (TST-17) |
+| Permissions des techniciens (§ 2.4) | **Configurées le 2026-10-09** avec l'accord du propriétaire : niveau « Contribution sans suppression », groupe SharePoint « LUWA Techniciens » (vide, à alimenter), lecture seule sur QUESTIONS et REGLES_FORMULAIRE | Non |
 | Tests d'écriture (§ 3.2) | Non exécutés ; site de test requis | Non : nécessaires avant les tests d'intégration |
 | Environnement Power Platform (§ 4) | Non vérifié par l'équipe projet | À contrôler par le développeur à l'ouverture de Studio (licence, DLP) |
-| Questions ouvertes | OQ-06 (P2, compression), OQ-12 (P2, réponses masquées), OQ-07 à OQ-11 (P3) | Non |
+| Questions ouvertes | OQ-06 (P2, compression — désactivée pour le prototype), OQ-08 à OQ-11 (P3) ; OQ-07 et OQ-12 clôturées (DEC-18, DEC-19) | Non |
 
 Aucun blocage de conception ne subsiste. Les éléments non réalisés sont des étapes d'exécution
 qui n'empêchent pas de démarrer le développement dans Power Apps Studio.

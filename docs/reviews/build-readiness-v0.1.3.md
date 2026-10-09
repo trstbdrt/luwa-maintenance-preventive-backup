@@ -106,7 +106,6 @@ Questions clôturées : OQ-01 (DEC-13), OQ-02 (DEC-14), OQ-03 (DEC-15), OQ-04 (D
 | ID | Point | Priorité | Bloque SharePoint ? | Bloque Power Apps ? | Bloque Power Automate ? |
 |------|------|------|------|------|------|
 | OQ-06 | Stockage des paramètres de compression | P2 | Non | Non (PA-17 uniquement) | Non |
-| OQ-07 | DateSoumission d'une inspection INACCESSIBLE | P3 | Non | Non | Non |
 | OQ-08 | VisibleParDefaut de SYS_001 (fichiers gelés) | P3 | Non | Non | Non |
 | OQ-09, OQ-10 | Structuration des conditions R130 + R131 et R150 / R151 | P3 | Non | Non | Non |
 | OQ-11 | Documents à compléter | P3 | Non | Non | Non |

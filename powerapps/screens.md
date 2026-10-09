@@ -77,6 +77,7 @@ Les catalogues sont petits : ils sont chargés une fois et évalués localement.
 | Au moins une réponse enregistrée, non soumise | EN_COURS |
 | Soumission réussie | TERMINE |
 | Déclaration d'ouvrage inaccessible | INACCESSIBLE |
+| Abandon manuel d'un brouillon depuis « Reprendre inspection » (DEC-20) | ABANDONNE |
 | Archivage (hors App 1) : TERMINE ou INACCESSIBLE, plus de 183 jours sans modification (DEC-16, DEC-17) | ARCHIVE |
 
 Aucune suppression n'est possible, quel que soit le statut.

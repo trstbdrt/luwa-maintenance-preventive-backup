@@ -1,0 +1,48 @@
+Screens:
+  Screen_Inspection:
+    Properties:
+      Fill: =RGBA(245, 247, 250, 1)
+      OnVisible: |-
+        =Set(gblInspection, LookUp(INSPECTIONS, InspectionGUID = gblInspectionGUID));
+        Set(gblInspectionID, gblInspection.InspectionID)
+    Children:
+      - lblInspTitre:
+          Control: Label@2.5.1
+          Properties:
+            Text: ="Inspection " & gblInspectionID
+            X: =40
+            Y: =30
+            Width: =1000
+            Height: =60
+            Size: =24
+            FontWeight: =FontWeight.Semibold
+      - lblInspInfos:
+          Control: Label@2.5.1
+          Properties:
+            Text: |-
+              =gblInspection.TypeInspection.Value & "  ·  " & gblInspection.NomOuvrage
+              & "  ·  " & gblInspection.StatutInspection.Value
+              & "  ·  créée le " & Text(gblInspection.DateCreation, "dd/mm/yyyy hh:mm")
+            X: =40
+            Y: =100
+            Width: =1000
+            Height: =40
+      - lblInspLot2:
+          Control: Label@2.5.1
+          Properties:
+            Text: |-
+              ="Questionnaire dynamique : lot 2."
+            X: =40
+            Y: =170
+            Width: =1000
+            Height: =40
+            Italic: =true
+      - btnInspAccueil:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Text: ="Accueil"
+            X: =40
+            Y: =680
+            Width: =200
+            Height: =50
+            OnSelect: =Navigate(Screen_Home, ScreenTransition.None)

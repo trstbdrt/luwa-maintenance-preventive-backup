@@ -101,7 +101,7 @@ en DEC-11 et DEC-12 et dans `docs/reviews/build-readiness-v0.1.3.md`.
 | PAU-01 | Export structuré : Export.zip contenant Export.xlsx et le dossier Photos/ | P1 | SP-08, SP-09, SP-10 |
 | PAU-02 | Export CSV des listes INSPECTIONS et REPONSES | P2 | PAU-01 |
 | PAU-03 | Archivage : statut ARCHIVE pour TERMINE / INACCESSIBLE si Aujourd'hui - DateDerniereModification > 183 jours, sans modifier DateDerniereModification, sans suppression | P2 | SP-08, DEC-16, DEC-17 |
-| PAU-04 | Attribution de l'InspectionID final `INS-{DateCreation AAAAMMJJ}-{ID SharePoint sur 6 chiffres}` et de Title | P1 | SP-08, DEC-14 |
+| PAU-04 | Attribution de l'InspectionID final (date en heure belge, DEC-23) `INS-{DateCreation AAAAMMJJ}-{ID SharePoint sur 6 chiffres}` et de Title | P1 | SP-08, DEC-14 |
 | PAU-05 | Création des dossiers photos `{InspectionGUID}/` (si non fait par Power Apps) | P2 | SP-10, DEC-15 |
 | PAU-06 | Flux d'envoi des photos appelé depuis Power Apps : création du dossier `{InspectionGUID}` si absent, du fichier et de ses métadonnées (technical design § 6.6) | P1 | SP-10, DEC-15 |
 
@@ -130,6 +130,7 @@ en DEC-11 et DEC-12 et dans `docs/reviews/build-readiness-v0.1.3.md`.
 | TST-17 | Aucune suppression possible pour un technicien (tous statuts) | P1 | SP-11 |
 | TST-18 | Volumétrie : requêtes filtrées sur colonnes indexées au-delà de 5 000 éléments (REPONSES) | P2 | SP-09, PA-16 |
 | TST-19 | Export : contenu de Export.zip, rattachement photo ↔ question | P1 | PAU-01 |
+| TEST-DELEGATION-001 | **Délégation sur volume** (site de test) : avec plus de 5 000 éléments dans INSPECTIONS et plus de 20 000 dans REPONSES, vérifier que les filtres sur `Inspecteur` (reprise, DEC-09), `NomOuvrage` (identification, historique) et `InspectionGUID` (REPONSES, PHOTOS_INSPECTIONS) ne produisent aucun avertissement de délégation dans Studio, retournent les éléments situés au-delà des 2 000 premiers ; temps de réponse mesuré et consigné. Principal risque technique (technical design PA-2) | P1 | SP-13, PA-03, PA-05, PA-20 |
 
 ---
 

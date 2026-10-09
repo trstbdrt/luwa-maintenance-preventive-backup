@@ -41,8 +41,8 @@ Ces fichiers servent à :
 |------|------|------|------|------|
 | INS-20261008-000001 | POTEAU | E100 511 | TERMINE | Inspection complète et soumissible : corrosion AVANCEE, calcul de perte d'épaisseur (25 %), affichage de POT_004_5 (R130 + R131), photos obligatoires atteintes |
 | INS-20261008-000002 | LUMINAIRE | E100 511-1 | EN_COURS | Inspection partiellement complétée (3 réponses) |
-| INS-20261008-000003 | POTEAU | K024 318-2 | INACCESSIBLE | Ouvrage inaccessible : commentaire et photo rattachés à SYS_001 |
-| INS-20261009-000004 | POTEAU | K024 318-2 | BROUILLON | Nouvelle inspection après "Accessible maintenant", aucune réponse encodée |
+| INS-20261008-000003 | POTEAU | K024 318 | INACCESSIBLE | Ouvrage inaccessible : commentaire et photo rattachés à SYS_001 |
+| INS-20261009-000004 | POTEAU | K024 318 | BROUILLON | Nouvelle inspection après "Accessible maintenant", aucune réponse encodée |
 
 Contrôle de l'inspection INS-20261008-000001 au regard des règles :
 
@@ -75,7 +75,7 @@ Exemple de contenu de la liste **INSPECTIONS**.
 | Inspecteur | Utilisateur ayant créé l'inspection |
 | DateCreation | Création de l'inspection (statut BROUILLON) |
 | DateDerniereModification | Dernière sauvegarde |
-| DateSoumission | Renseignée uniquement à la soumission (TERMINE) |
+| DateSoumission | Renseignée à la soumission (TERMINE) et à la validation du panneau « Inaccessible » (INACCESSIBLE, DEC-18) |
 | StatutInspection | BROUILLON, EN_COURS, TERMINE, INACCESSIBLE, ARCHIVE |
 | StatutTraitement | NON_ANALYSE à la création (DEC-02) ; App 1 n'écrit jamais d'autre valeur |
 | GPSLatitude / GPSLongitude | Facultatives ; vides dans deux exemples |

@@ -1,0 +1,381 @@
+Screens:
+  Screen_Identification:
+    Properties:
+      Fill: =RGBA(245, 247, 250, 1)
+      OnVisible: |-
+        =Reset(txtIdentOuvrage);
+        Clear(colHistoriqueOuvrage);
+        UpdateContext({
+            locDerniereInspection: Blank(),
+            locInspectionEnCoursExiste: false,
+            locRechercheFaite: false,
+            locAfficherPanneauInaccessible: false,
+            locOperationEnCours: false,
+            locInspectionSansCommentaire: Blank()
+        })
+    Children:
+      - lblIdentTitre:
+          Control: Label@2.5.1
+          Properties:
+            Text: ="Identification de l'ouvrage — " & gblTypeInspection
+            X: =40
+            Y: =30
+            Width: =1000
+            Height: =60
+            Size: =24
+            FontWeight: =FontWeight.Semibold
+      - txtIdentOuvrage:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            Default: =""
+            HintText: ="Nom de l'ouvrage (ex. E100 511)"
+            X: =40
+            Y: =110
+            Width: =500
+            Height: =56
+            Size: =18
+      - btnIdentRechercher:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Text: ="Rechercher"
+            X: =560
+            Y: =110
+            Width: =200
+            Height: =56
+            DisplayMode: =If(IsBlank(Trim(txtIdentOuvrage.Text)), DisplayMode.Disabled, DisplayMode.Edit)
+            OnSelect: |-
+              =Set(gblNomOuvrage, Upper(Trim(txtIdentOuvrage.Text)));
+              ClearCollect(
+                  colHistoriqueOuvrage,
+                  Sort(Filter(INSPECTIONS, NomOuvrage = gblNomOuvrage), DateCreation, SortOrder.Descending)
+              );
+              UpdateContext({
+                  locDerniereInspection: First(Filter(colHistoriqueOuvrage, TypeInspection.Value = gblTypeInspection)),
+                  locInspectionEnCoursExiste: !IsEmpty(
+                      Filter(
+                          colHistoriqueOuvrage,
+                          TypeInspection.Value = gblTypeInspection
+                              && (StatutInspection.Value = "BROUILLON" || StatutInspection.Value = "EN_COURS")
+                      )
+                  ),
+                  locRechercheFaite: true
+              })
+      - lblIdentDerniere:
+          Control: Label@2.5.1
+          Properties:
+            Visible: =locRechercheFaite
+            Text: |-
+              =If(
+                  IsBlank(locDerniereInspection),
+                  "Aucune inspection " & gblTypeInspection & " connue pour l'ouvrage " & gblNomOuvrage & ".",
+                  "Dernière inspection " & gblTypeInspection & " : "
+                  & Switch(
+                      locDerniereInspection.StatutInspection.Value,
+                      "TERMINE", "Terminée",
+                      "EN_COURS", "En cours",
+                      "BROUILLON", "Brouillon",
+                      "INACCESSIBLE", "Inaccessible",
+                      "ARCHIVE", "Archivée",
+                      "ABANDONNE", "Abandonnée",
+                      locDerniereInspection.StatutInspection.Value
+                  )
+                  & " (" & Text(locDerniereInspection.DateCreation, "dd/mm/yyyy") & ")"
+              )
+            X: =40
+            Y: =190
+            Width: =720
+            Height: =40
+            FontWeight: =FontWeight.Semibold
+      - lblIdentConcurrence:
+          Control: Label@2.5.1
+          Properties:
+            Visible: =locRechercheFaite && locInspectionEnCoursExiste
+            Text: ="⚠ Une inspection est actuellement en cours sur cet ouvrage."
+            Color: =RGBA(176, 96, 0, 1)
+            Fill: =RGBA(255, 244, 222, 1)
+            X: =40
+            Y: =240
+            Width: =720
+            Height: =44
+            PaddingLeft: =12
+      - btnIdentCommencer:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Visible: =locRechercheFaite
+            Text: |-
+              =If(
+                  locDerniereInspection.StatutInspection.Value = "INACCESSIBLE",
+                  "Accessible maintenant",
+                  "Commencer l'inspection"
+              )
+            X: =40
+            Y: =310
+            Width: =340
+            Height: =70
+            Size: =18
+            DisplayMode: |-
+              =If(locOperationEnCours || Upper(Trim(txtIdentOuvrage.Text)) <> gblNomOuvrage, DisplayMode.Disabled, DisplayMode.Edit)
+            OnSelect: |-
+              =UpdateContext({locOperationEnCours: true});
+              Set(gblInspectionGUID, Text(GUID()));
+              Set(gblInspectionID, "TMP-" & Left(gblInspectionGUID, 8));
+              Set(
+                  gblInspection,
+                  IfError(
+                      Patch(
+                          INSPECTIONS,
+                          Defaults(INSPECTIONS),
+                          {
+                              Title: gblInspectionID,
+                              InspectionID: gblInspectionID,
+                              InspectionGUID: gblInspectionGUID,
+                              TypeInspection: {Value: gblTypeInspection},
+                              NomOuvrage: gblNomOuvrage,
+                              Inspecteur: nfPersonneCourante,
+                              DateCreation: Now(),
+                              DateDerniereModification: Now(),
+                              StatutInspection: {Value: "BROUILLON"},
+                              StatutTraitement: {Value: "NON_ANALYSE"},
+                              GPSLatitude: Location.Latitude,
+                              GPSLongitude: Location.Longitude,
+                              InspectionPrecedenteGUID: If(
+                                  locDerniereInspection.StatutInspection.Value = "INACCESSIBLE",
+                                  locDerniereInspection.InspectionGUID
+                              )
+                          }
+                      ),
+                      Notify("Création de l'inspection impossible : " & FirstError.Message, NotificationType.Error);
+                      Blank()
+                  )
+              );
+              UpdateContext({locOperationEnCours: false});
+              If(!IsBlank(gblInspection), Navigate(Screen_Inspection, ScreenTransition.None))
+      - btnIdentInaccessible:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Visible: =locRechercheFaite
+            Text: ="Inspection inaccessible"
+            X: =400
+            Y: =310
+            Width: =360
+            Height: =70
+            Size: =18
+            DisplayMode: |-
+              =If(Upper(Trim(txtIdentOuvrage.Text)) <> gblNomOuvrage, DisplayMode.Disabled, DisplayMode.Edit)
+            OnSelect: |-
+              =Reset(txtIdentCommentaireInaccessible);
+              UpdateContext({locAfficherPanneauInaccessible: true})
+      - lblIdentHistoriqueTitre:
+          Control: Label@2.5.1
+          Properties:
+            Visible: =locRechercheFaite
+            Text: ="Inspections de l'ouvrage"
+            X: =800
+            Y: =110
+            Width: =520
+            Height: =40
+            FontWeight: =FontWeight.Semibold
+      - galIdentHistorique:
+          Control: Gallery@2.15.0
+          Variant: BrowseLayout_Vertical_TwoTextOneImageVariant_ver5.0
+          Properties:
+            Visible: =locRechercheFaite
+            Items: =colHistoriqueOuvrage
+            X: =800
+            Y: =160
+            Width: =520
+            Height: =560
+            TemplateSize: =76
+            OnSelect: |-
+              =Set(gblInspectionConsultee, ThisItem);
+              Set(gblEcranRetourHistorique, Screen_Identification);
+              Navigate(Screen_History, ScreenTransition.None)
+          Children:
+            - lblIdentHistoLigne1:
+                Control: Label@2.5.1
+                Properties:
+                  Text: =ThisItem.InspectionID & "  ·  " & ThisItem.TypeInspection.Value
+                  X: =16
+                  Y: =6
+                  Width: =Parent.TemplateWidth - 32
+                  Height: =32
+                  FontWeight: =FontWeight.Semibold
+            - lblIdentHistoLigne2:
+                Control: Label@2.5.1
+                Properties:
+                  Text: =ThisItem.StatutInspection.Value & "  ·  créée le " & Text(ThisItem.DateCreation, "dd/mm/yyyy")
+                  X: =16
+                  Y: =38
+                  Width: =Parent.TemplateWidth - 32
+                  Height: =30
+                  Size: =12
+      - lblIdentRelancer:
+          Control: Label@2.5.1
+          Properties:
+            Visible: =locRechercheFaite && Upper(Trim(txtIdentOuvrage.Text)) <> gblNomOuvrage
+            Text: |-
+              ="Nom d'ouvrage modifié : cliquez à nouveau sur Rechercher."
+            Color: =RGBA(176, 96, 0, 1)
+            X: =40
+            Y: =390
+            Width: =720
+            Height: =36
+      - btnIdentRetour:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Text: ="Retour"
+            X: =40
+            Y: =680
+            Width: =200
+            Height: =50
+            OnSelect: =Navigate(Screen_Type, ScreenTransition.None)
+      - rectIdentVoile:
+          Control: Rectangle@2.3.0
+          Properties:
+            Visible: =locAfficherPanneauInaccessible
+            Fill: =RGBA(0, 0, 0, 0.4)
+            X: =0
+            Y: =0
+            Width: =Parent.Width
+            Height: =Parent.Height
+      - conIdentPanneauInaccessible:
+          Control: GroupContainer@1.3.0
+          Variant: ManualLayout
+          Properties:
+            Visible: =locAfficherPanneauInaccessible
+            Fill: =RGBA(255, 255, 255, 1)
+            X: =283
+            Y: =134
+            Width: =800
+            Height: =500
+          Children:
+            - lblInaccTitre:
+                Control: Label@2.5.1
+                Properties:
+                  Text: ="Ouvrage inaccessible — " & gblNomOuvrage
+                  X: =30
+                  Y: =20
+                  Width: =740
+                  Height: =50
+                  Size: =20
+                  FontWeight: =FontWeight.Semibold
+            - lblInaccCommentaire:
+                Control: Label@2.5.1
+                Properties:
+                  Text: ="Commentaire (obligatoire)"
+                  X: =30
+                  Y: =80
+                  Width: =740
+                  Height: =36
+            - txtIdentCommentaireInaccessible:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  Default: =""
+                  Mode: =TextMode.MultiLine
+                  X: =30
+                  Y: =120
+                  Width: =740
+                  Height: =180
+            - lblInaccPhotos:
+                Control: Label@2.5.1
+                Properties:
+                  Text: |-
+                    ="Photos (facultatives) : disponibles au lot 3, avec l'envoi des fichiers."
+                  X: =30
+                  Y: =310
+                  Width: =740
+                  Height: =36
+                  Size: =12
+                  Italic: =true
+            - btnInaccValider:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  Text: =If(IsBlank(locInspectionSansCommentaire), "Valider", "Réessayer")
+                  X: =30
+                  Y: =410
+                  Width: =240
+                  Height: =60
+                  DisplayMode: |-
+                    =If(
+                        IsBlank(Trim(txtIdentCommentaireInaccessible.Text)) || locOperationEnCours,
+                        DisplayMode.Disabled,
+                        DisplayMode.Edit
+                    )
+                  OnSelect: |-
+                    =UpdateContext({locOperationEnCours: true});
+                    // 1. Création de l'inspection INACCESSIBLE (sauf si elle existe déjà après un échec du commentaire)
+                    If(
+                        IsBlank(locInspectionSansCommentaire),
+                        Set(gblInspectionGUID, Text(GUID()));
+                        Set(gblInspectionID, "TMP-" & Left(gblInspectionGUID, 8));
+                        Set(
+                            gblInspection,
+                            IfError(
+                                Patch(
+                                    INSPECTIONS,
+                                    Defaults(INSPECTIONS),
+                                    {
+                                        Title: gblInspectionID,
+                                        InspectionID: gblInspectionID,
+                                        InspectionGUID: gblInspectionGUID,
+                                        TypeInspection: {Value: gblTypeInspection},
+                                        NomOuvrage: gblNomOuvrage,
+                                        Inspecteur: nfPersonneCourante,
+                                        DateCreation: Now(),
+                                        DateDerniereModification: Now(),
+                                        DateSoumission: Now(),
+                                        StatutInspection: {Value: "INACCESSIBLE"},
+                                        StatutTraitement: {Value: "NON_ANALYSE"},
+                                        GPSLatitude: Location.Latitude,
+                                        GPSLongitude: Location.Longitude
+                                    }
+                                ),
+                                Notify("Création de l'inspection impossible : " & FirstError.Message, NotificationType.Error);
+                                Blank()
+                            )
+                        );
+                        If(!IsBlank(gblInspection), UpdateContext({locInspectionSansCommentaire: gblInspectionGUID}))
+                    );
+                    // 2. Commentaire SYS_001 (obligatoire) ; en cas d'échec, l'inspection est conservée et le bouton devient « Réessayer »
+                    If(
+                        !IsBlank(locInspectionSansCommentaire),
+                        With(
+                            {wReponseID: Text(GUID())},
+                            IfError(
+                                Patch(
+                                    REPONSES,
+                                    Defaults(REPONSES),
+                                    {
+                                        Title: wReponseID,
+                                        ReponseID: wReponseID,
+                                        InspectionGUID: locInspectionSansCommentaire,
+                                        QuestionCode: "SYS_001",
+                                        Commentaire: Trim(txtIdentCommentaireInaccessible.Text),
+                                        DateEncodage: Now(),
+                                        UtilisateurEncodage: nfPersonneCourante
+                                    }
+                                );
+                                UpdateContext({locInspectionSansCommentaire: Blank()});
+                                Notify("Ouvrage déclaré inaccessible.", NotificationType.Success);
+                                Navigate(Screen_Home, ScreenTransition.None),
+                                Notify(
+                                    "Inspection créée mais commentaire non enregistré : " & FirstError.Message
+                                    & ". Cliquez sur Réessayer.",
+                                    NotificationType.Error
+                                )
+                            )
+                        )
+                    );
+                    UpdateContext({locOperationEnCours: false})
+            - btnInaccAnnuler:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  Text: ="Annuler"
+                  X: =300
+                  Y: =410
+                  Width: =200
+                  Height: =60
+                  DisplayMode: |-
+                    =If(IsBlank(locInspectionSansCommentaire), DisplayMode.Edit, DisplayMode.Disabled)
+                  OnSelect: |-
+                    =UpdateContext({locAfficherPanneauInaccessible: false})

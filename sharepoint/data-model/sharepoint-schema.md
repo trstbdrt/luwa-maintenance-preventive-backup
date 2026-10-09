@@ -73,6 +73,7 @@ InspectionPrecedenteGUID = InspectionGUID de la dernière inspection INACCESSIBL
 - TERMINE
 - INACCESSIBLE
 - ARCHIVE
+- ABANDONNE (ajoutée par DEC-20, `docs/decisions/technical-decisions-v0.2.md`)
 
 ## Valeurs StatutTraitement
 
