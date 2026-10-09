@@ -1,4 +1,4 @@
-// LUWA Inspection Backup — Lot 2
+// LUWA Inspection Backup — Lot 2.1
 // À coller dans : App > propriété OnStart (remplace intégralement la version du lot 1)
 // Technical design : § 2 (variables globales), § 4 (collections)
 
@@ -13,6 +13,8 @@ Set(gblInspectionConsultee, Blank());
 Set(gblEcranRetourHistorique, Screen_Home);
 Set(gblRepriseLocale, false);
 Set(gblSoumissionBloquee, false);
+Set(gblResteObligatoires, 0);
+Set(gblResteCommentaires, 0);
 
 // --- Catalogues (lus une fois, choix convertis en texte) -----------------
 ClearCollect(
@@ -35,7 +37,8 @@ ClearCollect(
             NbPhotosMax: NbPhotosMax,
             VisibleParDefaut: VisibleParDefaut,
             ValeursPossibles: ValeursPossibles,
-            FormuleCalcul: FormuleCalcul
+            FormuleCalcul: FormuleCalcul,
+            LibellesValeurs: LibellesValeurs
         }
     )
 );

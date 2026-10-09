@@ -25,6 +25,8 @@ Décisions précédentes : DEC-01 à DEC-17
 | DEC-23 | Date de l'InspectionID final | AAAAMMJJ calculé en heure belge (Europe/Brussels) | Revue P6 |
 | DEC-24 | Résolution des photos | Capture par le contrôle Appareil photo (résolution proche de l'écran) ; pas de capture pleine résolution | Revue volumétrie |
 | DEC-25 | Protection hors connexion | Copie locale de l'inspection en cours, récupération au démarrage, enregistrement différé ; application mobile Power Apps | Revue couverture réseau |
+| DEC-26 | Libellés affichés | Libellés accentués dans QUESTIONS ; nouvelle colonne LibellesValeurs pour l'affichage des réponses ; codes inchangés | Retours de test du lot 2 |
+| DEC-27 | Enregistrement | Plus d'enregistrement automatique périodique vers SharePoint : brouillon enregistré par le technicien ou au retour à l'accueil ; copie locale conservée (DEC-25) | Retours de test du lot 2 |
 
 ---
 
@@ -181,4 +183,34 @@ Couverture 4G incomplète en Wallonie : sans protection, une fermeture de l'appl
 ## Conséquences
 
 - Tant qu'une inspection locale n'est pas enregistrée, « Nouvelle inspection » est désactivée et la reprise d'une autre inspection est refusée, pour ne pas écraser la copie locale.
+
+---
+
+# DEC-26 — Libellés affichés
+
+## Décision
+
+- Les libellés de QUESTIONS (colonne Libelle) sont écrits avec accents et ponctuation ; codes, règles et valeurs inchangés.
+- Nouvelle colonne **LibellesValeurs** (QUESTIONS) : libellés affichés des réponses, dans l'ordre de ValeursPossibles, séparés par `|`
+  (ex. `INF_4CM2|SUP_EGAL_4CM2` → `Inférieure à 4 cm²|Supérieure ou égale à 4 cm²`).
+- L'application affiche les libellés et enregistre **toujours les codes** de ValeursPossibles.
+- Les codes de questions (POT_xxx, LUM_xxx) ne sont plus affichés aux utilisateurs.
+
+## Conséquences
+
+- `questions.csv` (dégelé pour cette décision, validée par le pilotage le 2026-10-09) contient désormais des caractères accentués (UTF-8) et la colonne LibellesValeurs.
+- Liste SharePoint QUESTIONS mise à jour le 2026-10-09 (34 libellés relus et vérifiés).
+- Aucun libellé de réponse ne dépasse une ligne sur tablette (vérifié pour les 26 questions à choix).
+
+---
+
+# DEC-27 — Enregistrement du brouillon
+
+## Décision
+
+- Suppression de l'enregistrement automatique toutes les 60 s vers SharePoint.
+- SharePoint est mis à jour par le bouton « Enregistrer le brouillon » et au retour à l'accueil.
+- La copie locale après chaque modification (DEC-25) est conservée.
+- À l'enregistrement, l'utilisateur est informé du nombre de questions et commentaires obligatoires restant à compléter ;
+  un compteur permanent figure dans l'en-tête de l'inspection.
 

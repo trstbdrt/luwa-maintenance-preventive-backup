@@ -112,10 +112,13 @@ Une ligne = une question.
 | VisibleParDefaut | Yes/No | Oui | Non |
 | ValeursPossibles | Multiple line text | Non | Non |
 | FormuleCalcul | Multiple line text | Non | Non |
+| LibellesValeurs | Multiple line text | Non | Non |
 
 ## Règles de remplissage
 
 Title = QuestionCode (DEC-01)
+
+LibellesValeurs : libellés affichés des réponses, dans le même ordre que ValeursPossibles, séparés par `|` ; seuls les codes de ValeursPossibles sont enregistrés (DEC-26).
 
 ## Valeurs DisplayGroup
 

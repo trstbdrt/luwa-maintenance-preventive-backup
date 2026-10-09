@@ -251,6 +251,26 @@ ClearCollect(
     )
 );
 Set(gblSoumissionBloquee, !IsEmpty(Filter(colReglesEval, Vraie && Action = "BLOQUER_SOUMISSION")));
+// Compteurs « reste à compléter » (questions PHOTO exclues jusqu'au lot 3)
+Set(
+    gblResteObligatoires,
+    CountRows(
+        Filter(
+            colEtatComplet As wE,
+            wE.ObligatoireEff && wE.TypeQuestion <> "PHOTO"
+                && With({wR: LookUp(colReponses, QuestionCode = wE.QuestionCode)}, IsBlank(wR.Valeur) && IsBlank(wR.ValeurNumerique))
+        )
+    )
+);
+Set(
+    gblResteCommentaires,
+    CountRows(
+        Filter(
+            colEtatComplet As wE,
+            wE.CommentaireObligatoireEff && IsBlank(LookUp(colReponses, QuestionCode = wE.QuestionCode).Commentaire)
+        )
+    )
+);
 // Lignes affichées, avec en-tête de groupe à chaque changement de DisplayGroup
 ClearCollect(colQV, Sort(Filter(colEtatComplet, Visible), OrdreAffichage));
 ClearCollect(

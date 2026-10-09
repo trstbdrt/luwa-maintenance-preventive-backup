@@ -10,7 +10,7 @@ Prérequis : Lot 1 importé et validé. Plan général : `powerapps/canvas-app-b
 | `03-App.ConfirmExit.fx` | App > **ConfirmExit** (1re ligne de formule) | — |
 | `04-Screen_Home.pa.yaml` | Arborescence (écran) | Screen_Home du lot 1 (ajoute la récupération hors connexion) |
 | `06-Screen_Inspection.pa.yaml` | Arborescence (écran) | Screen_Inspection provisoire du lot 1 |
-| `08-tmrInspAutoSave.pa.yaml` | Sélectionner **Screen_Inspection** puis coller (contrôle) | — |
+| `08-tmrInspAutoSave.pa.yaml` | **Plus utilisé depuis la mise à jour 2.1** (DEC-27) | — |
 | `07-btnInspEvaluer.OnSelect.fx` | Screen_Inspection > btnInspEvaluer > **OnSelect** | Uniquement si l'écran a été collé avant la correction du moteur (voir plus bas) |
 
 `App.Formulas`, Screen_Type, Screen_Identification et Screen_History ne changent pas.
@@ -73,3 +73,20 @@ La première version utilisait des boutons qui s'appelaient en boucle (`btnInspP
 
 1. supprimer `btnInspPasse`, `btnInspPasseSuite` et `btnInspFinaliser` ;
 2. coller `07-btnInspEvaluer.OnSelect.fx` dans `btnInspEvaluer` > **OnSelect** (remplace la formule existante).
+
+## Mise à jour 2.1 (retours de test du lot 2)
+
+Changements : libellés accentués et libellés de réponses (DEC-26), codes de questions masqués, bouton « OK » à côté des champs
+numériques, réponses à choix agrandies, bouton « Enregistrer le brouillon » avec message « reste à compléter » et compteur
+dans l'en-tête, **plus d'enregistrement automatique toutes les 60 s** (DEC-27), retour à l'accueil corrigé,
+liste remise en haut à l'ouverture, historique affichant les libellés.
+
+Étapes dans Studio :
+
+1. **Data** (cylindre) > **QUESTIONS** > **…** > **Refresh** (nouvelle colonne LibellesValeurs).
+2. Supprimer **tmrInspAutoSave** (sous Screen_Inspection), puis supprimer **Screen_Inspection** et **Screen_History**.
+3. Coller `06-Screen_Inspection.pa.yaml` puis `07-Screen_History.pa.yaml` (ce dernier est dans ce dossier lot2).
+4. App > **OnStart** : remplacer tout par `02-App.OnStart.fx` ; … > **Run OnStart**.
+5. Vérificateur : 0 erreur de formule ; Save.
+
+`08-tmrInspAutoSave.pa.yaml` n'est plus utilisé (DEC-27).
