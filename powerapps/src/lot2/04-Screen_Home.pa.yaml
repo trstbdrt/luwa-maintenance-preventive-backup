@@ -62,9 +62,8 @@ Screens:
                   colInspectionsAReprendre,
                   Sort(
                       Filter(
-                          INSPECTIONS,
-                          Inspecteur.Email = gblUtilisateur.Email
-                              && (StatutInspection.Value = "BROUILLON" || StatutInspection.Value = "EN_COURS")
+                          Filter(INSPECTIONS, StatutInspection.Value = "BROUILLON" || StatutInspection.Value = "EN_COURS"),
+                          Lower(Inspecteur.Email) = Lower(User().Email)
                       ),
                       DateDerniereModification,
                       SortOrder.Descending
@@ -281,9 +280,8 @@ Screens:
                         colInspectionsAReprendre,
                         Sort(
                             Filter(
-                                INSPECTIONS,
-                                Inspecteur.Email = gblUtilisateur.Email
-                                    && (StatutInspection.Value = "BROUILLON" || StatutInspection.Value = "EN_COURS")
+                                Filter(INSPECTIONS, StatutInspection.Value = "BROUILLON" || StatutInspection.Value = "EN_COURS"),
+                                Lower(Inspecteur.Email) = Lower(User().Email)
                             ),
                             DateDerniereModification,
                             SortOrder.Descending

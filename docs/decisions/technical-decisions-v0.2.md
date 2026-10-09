@@ -27,6 +27,7 @@ Décisions précédentes : DEC-01 à DEC-17
 | DEC-25 | Protection hors connexion | Copie locale de l'inspection en cours, récupération au démarrage, enregistrement différé ; application mobile Power Apps | Revue couverture réseau |
 | DEC-26 | Libellés affichés | Libellés accentués dans QUESTIONS ; nouvelle colonne LibellesValeurs pour l'affichage des réponses ; codes inchangés | Retours de test du lot 2 |
 | DEC-27 | Enregistrement | Plus d'enregistrement automatique périodique vers SharePoint : brouillon enregistré par le technicien ou au retour à l'accueil ; copie locale conservée (DEC-25) | Retours de test du lot 2 |
+| DEC-28 | Une inspection en cours par personne | Même ouvrage et même type : « Reprendre mon inspection » au lieu de « Commencer » ; inaccessible = transformation de mon inspection en cours ; nom des autres personnes affiché | Retours de test du lot 2 |
 
 ---
 
@@ -213,4 +214,24 @@ Couverture 4G incomplète en Wallonie : sans protection, une fermeture de l'appl
 - La copie locale après chaque modification (DEC-25) est conservée.
 - À l'enregistrement, l'utilisateur est informé du nombre de questions et commentaires obligatoires restant à compléter ;
   un compteur permanent figure dans l'en-tête de l'inspection.
+
+---
+
+# DEC-28 — Une inspection en cours par personne
+
+## Décision
+
+Sur l'écran d'identification, pour un même ouvrage et un même type d'inspection :
+
+- si l'utilisateur a déjà une inspection BROUILLON ou EN_COURS, le bouton **« Reprendre mon inspection »** remplace
+  « Commencer l'inspection » (la plus récente si plusieurs existent) : une seule inspection en cours par personne ;
+- les inspections en cours **d'autres personnes** sont signalées avec leur nom (« Inspection en cours par … ») ;
+  elles ne peuvent pas être reprises (DEC-09) et n'empêchent pas de commencer la sienne ;
+- « Inspection inaccessible » alors que l'utilisateur a une inspection en cours : **cette inspection passe à INACCESSIBLE**
+  (DateSoumission et DateDerniereModification mises à jour, commentaire SYS_001 ajouté, réponses existantes conservées) ;
+  aucune seconde inspection n'est créée (option A).
+
+## Conséquences
+
+- La liste « Reprendre inspection » de l'accueil filtre sur l'utilisateur connecté sans tenir compte de la casse des adresses e-mail.
 

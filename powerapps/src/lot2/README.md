@@ -90,3 +90,10 @@ liste remise en haut à l'ouverture, historique affichant les libellés.
 5. Vérificateur : 0 erreur de formule ; Save.
 
 `08-tmrInspAutoSave.pa.yaml` n'est plus utilisé (DEC-27).
+
+## Mise à jour 2.2 (DEC-28 et liste « Reprendre »)
+
+- `04-Screen_Home.pa.yaml` : « Reprendre inspection » filtre sur l'utilisateur connecté (sans dépendre de l'OnStart, insensible à la casse).
+- `05-Screen_Identification.pa.yaml` (nouveau dans ce dossier) : « Reprendre mon inspection », noms des autres personnes, inaccessible = transformation de mon inspection en cours.
+
+Étapes : supprimer **Screen_Home** et **Screen_Identification**, coller `04-Screen_Home.pa.yaml` et `05-Screen_Identification.pa.yaml` du dossier lot2, Save.
