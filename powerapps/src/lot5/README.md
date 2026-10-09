@@ -22,3 +22,8 @@
 
 Étapes : supprimer **Screen_Inspection**, coller `06-Screen_Inspection.pa.yaml` (caméra à réinsérer si refusée) ;
 **Run OnStart** (pour reconstruire la liste avec les numéros) ; 0 erreur ; Save ; Publish. OnStart inchangé.
+
+## Récapitulatif (5.0)
+
+`09-Screen_Resume.pa.yaml` : les questions du récapitulatif (et du rapport PDF) portent le même numéro que dans le formulaire.
+Étapes : supprimer **Screen_Resume**, coller le fichier ; Save ; Publish.
