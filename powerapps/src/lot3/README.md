@@ -58,3 +58,15 @@ Poteau `TEST 301`, luminaire `TEST 301-1`. Tablette avec l'application mobile Po
 | P10 | Historique > TEST 301 | Réponses en libellés, photos visibles, lecture seule |
 | P11 | Luminaire `TEST 301-1` : LUM_001 = Non présent + commentaire, Résumé, Soumettre | Soumission possible avec la seule question LUM_001 |
 | P12 | Inaccessible avec photo : à faire au lot suivant (panneau SYS_001) | — |
+
+## Mise à jour 3.1 (retours de test du lot 3)
+
+- Bouton **« Valider l'inspection »** grisé tant qu'il reste une question, une photo, un commentaire obligatoire ou un blocage.
+- Compteur de l'en-tête **cliquable** : amène à la prochaine question à compléter (surlignée) ; blocages inclus.
+- Raison du blocage affichée sur la question (épaisseur sans corrosion = 0).
+- Écran **Récapitulatif** (Screen_Resume) : questions affichées, réponse en libellé, commentaire, photos ; toucher une ligne rouvre
+  le formulaire sur la question ; « Soumettre l'inspection ».
+- Photos : bouton **« Terminé (n photo(s)) »** qui envoie aussitôt les photos prises ; confirmation « Photo n ajoutée » ;
+  extension `.png` (la caméra Power Apps produit du PNG).
+
+Étapes : supprimer **Screen_Inspection** et **Screen_Resume**, coller `06-Screen_Inspection.pa.yaml` et `09-Screen_Resume.pa.yaml`, Save, Publish.

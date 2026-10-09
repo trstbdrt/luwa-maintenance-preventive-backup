@@ -3,58 +3,43 @@ Screens:
     Properties:
       Fill: =RGBA(245, 247, 250, 1)
       OnVisible: |-
-        =// Contrôles de soumission (TD § 5.6) sur l'état calculé par le moteur de règles
+        =// Récapitulatif : questions affichées avec réponse (libellé), commentaire et nombre de photos
         ClearCollect(
-            colAnomalies,
+            colRecap,
             ForAll(
-                Filter(
-                    colEtatComplet As wE,
-                    wE.ObligatoireEff && wE.TypeQuestion <> "PHOTO"
-                        && With({wR: LookUp(colReponses, QuestionCode = wE.QuestionCode)}, IsBlank(wR.Valeur) && IsBlank(wR.ValeurNumerique))
-                ) As wE,
-                {Ordre: wE.OrdreAffichage, TypeAnomalie: "Question obligatoire", QuestionCode: wE.QuestionCode, Libelle: wE.Libelle, Detail: "Réponse manquante"}
-            )
-        );
-        Collect(
-            colAnomalies,
-            ForAll(
-                Filter(
-                    colEtatComplet As wE,
-                    wE.Visible
-                        && CountRows(Filter(colPhotos, QuestionCode = wE.QuestionCode))
-                            < If(wE.TypeQuestion = "PHOTO" && wE.ObligatoireEff, Max(1, wE.PhotosMin), wE.PhotosMin)
-                ) As wE,
-                {
-                    Ordre: wE.OrdreAffichage,
-                    TypeAnomalie: "Photo manquante",
-                    QuestionCode: wE.QuestionCode,
-                    Libelle: wE.Libelle,
-                    Detail: CountRows(Filter(colPhotos, QuestionCode = wE.QuestionCode)) & "/"
-                        & If(wE.TypeQuestion = "PHOTO" && wE.ObligatoireEff, Max(1, wE.PhotosMin), wE.PhotosMin) & " photo(s)"
-                }
-            )
-        );
-        Collect(
-            colAnomalies,
-            ForAll(
-                Filter(
-                    colEtatComplet As wE,
-                    wE.CommentaireObligatoireEff && IsBlank(LookUp(colReponses, QuestionCode = wE.QuestionCode).Commentaire)
-                ) As wE,
-                {Ordre: wE.OrdreAffichage, TypeAnomalie: "Commentaire obligatoire", QuestionCode: wE.QuestionCode, Libelle: wE.Libelle, Detail: "Commentaire manquant"}
-            )
-        );
-        Collect(
-            colAnomalies,
-            ForAll(
-                Filter(colReglesEval, Vraie && Action = "BLOQUER_SOUMISSION") As wR,
-                {
-                    Ordre: LookUp(colQuestions, QuestionCode = wR.QuestionSource).OrdreAffichage,
-                    TypeAnomalie: "Blocage",
-                    QuestionCode: wR.QuestionSource,
-                    Libelle: LookUp(colQuestions, QuestionCode = wR.QuestionSource).Libelle,
-                    Detail: wR.Commentaire
-                }
+                Sort(Filter(colEtatComplet, Visible), OrdreAffichage) As wE,
+                With(
+                    {wR: LookUp(colReponses, QuestionCode = wE.QuestionCode), wN: CountRows(Filter(colPhotos, QuestionCode = wE.QuestionCode))},
+                    {
+                        Ordre: wE.OrdreAffichage,
+                        QuestionCode: wE.QuestionCode,
+                        Libelle: wE.Libelle,
+                        Groupe: wE.DisplayGroup,
+                        Reponse: Switch(
+                            wE.TypeQuestion,
+                            "PHOTO", wN & " photo(s)",
+                            "NUMERIQUE", If(IsBlank(wR.ValeurNumerique), "—", Text(wR.ValeurNumerique)),
+                            "CALCUL", If(IsBlank(wR.ValeurNumerique), "—", Text(Round(wR.ValeurNumerique, 1)) & " %"),
+                            "TEXTE", Coalesce(wR.Valeur, "—"),
+                            If(
+                                IsBlank(wR.Valeur),
+                                "—",
+                                With(
+                                    {
+                                        wCodes: Split(wE.ValeursPossibles, "|"),
+                                        wLibs: Split(Coalesce(wE.LibellesValeurs, wE.ValeursPossibles), "|")
+                                    },
+                                    With(
+                                        {wPos: First(Filter(Sequence(CountRows(wCodes)), Index(wCodes, Value).Value = wR.Valeur)).Value},
+                                        If(IsBlank(wPos), wR.Valeur, Index(wLibs, wPos).Value)
+                                    )
+                                )
+                            )
+                        ),
+                        Commentaire: wR.Commentaire,
+                        Photos: If(wE.TypeQuestion = "PHOTO" || wN = 0, "", wN & " photo(s)")
+                    }
+                )
             )
         );
         UpdateContext({locSoumissionEnCours: false})
@@ -62,7 +47,7 @@ Screens:
       - lblResTitre:
           Control: Label@2.5.1
           Properties:
-            Text: ="Résumé — " & gblInspectionID & "  —  " & gblNomOuvrage
+            Text: ="Récapitulatif — " & gblInspectionID & "  —  " & gblNomOuvrage
             X: =40
             Y: =16
             Width: =1000
@@ -73,105 +58,80 @@ Screens:
           Control: Label@2.5.1
           Properties:
             Text: |-
-              =gblTypeInspection & "  ·  "
-              & CountRows(Filter(colEtatComplet, Visible)) & " questions affichées  ·  "
-              & CountRows(colPhotos) & " photo(s)  ·  "
-              & If(IsEmpty(colAnomalies), "aucune anomalie", CountRows(colAnomalies) & " point(s) à compléter")
+              =gblTypeInspection & "  ·  " & CountRows(colRecap) & " questions  ·  " & CountRows(colPhotos) & " photo(s)"
+              & "  ·  touchez une ligne pour modifier"
             X: =40
             Y: =66
-            Width: =1000
-            Height: =32
-      - lblResOK:
-          Control: Label@2.5.1
-          Properties:
-            Visible: =IsEmpty(colAnomalies)
-            Text: ="✔ Le formulaire est complet. Vous pouvez soumettre l'inspection."
-            Color: =RGBA(16, 124, 16, 1)
-            Fill: =RGBA(223, 246, 221, 1)
-            Size: =16
-            X: =40
-            Y: =120
             Width: =1286
-            Height: =60
-            PaddingLeft: =16
-      - galResAnomalies:
+            Height: =32
+      - galResRecap:
           Control: Gallery@2.15.0
           Variant: BrowseLayout_Vertical_TwoTextOneImageVariant_ver5.0
           Properties:
-            Visible: =!IsEmpty(colAnomalies)
-            Items: =Sort(colAnomalies, Ordre)
+            Items: =colRecap
             X: =40
-            Y: =110
+            Y: =104
             Width: =1286
-            Height: =560
-            TemplateSize: =70
+            Height: =570
+            TemplateSize: =62
             OnSelect: |-
               =Set(gblQuestionCible, ThisItem.QuestionCode);
               Navigate(Screen_Inspection, ScreenTransition.None)
           Children:
-            - lblResAnoType:
-                Control: Label@2.5.1
-                Properties:
-                  OnSelect: =Select(Parent)
-                  Text: =ThisItem.TypeAnomalie
-                  Color: =If(ThisItem.TypeAnomalie = "Blocage", RGBA(196, 43, 28, 1), RGBA(176, 96, 0, 1))
-                  FontWeight: =FontWeight.Semibold
-                  X: =16
-                  Y: =6
-                  Width: =260
-                  Height: =28
-            - lblResAnoLibelle:
+            - lblRecapLibelle:
                 Control: Label@2.5.1
                 Properties:
                   OnSelect: =Select(Parent)
                   Text: =ThisItem.Libelle
+                  FontWeight: =FontWeight.Semibold
                   X: =16
-                  Y: =34
-                  Width: =Parent.TemplateWidth - 400
+                  Y: =4
+                  Width: =Parent.TemplateWidth * 0.5
                   Height: =28
-            - lblResAnoDetail:
+            - lblRecapReponse:
                 Control: Label@2.5.1
                 Properties:
                   OnSelect: =Select(Parent)
-                  Text: =ThisItem.Detail
-                  Align: =Align.Right
-                  X: =Parent.TemplateWidth - 380
-                  Y: =20
-                  Width: =300
+                  Text: =ThisItem.Reponse & If(IsBlank(ThisItem.Photos), "", "  ·  " & ThisItem.Photos)
+                  X: =Parent.TemplateWidth * 0.5 + 16
+                  Y: =4
+                  Width: =Parent.TemplateWidth * 0.5 - 80
                   Height: =28
-            - icoResAnoOuvrir:
+            - lblRecapCommentaire:
+                Control: Label@2.5.1
+                Properties:
+                  OnSelect: =Select(Parent)
+                  Visible: =!IsBlank(ThisItem.Commentaire)
+                  Text: ="💬 " & ThisItem.Commentaire
+                  Size: =11
+                  Italic: =true
+                  Color: =RGBA(96, 94, 92, 1)
+                  X: =16
+                  Y: =32
+                  Width: =Parent.TemplateWidth - 80
+                  Height: =24
+            - icoRecapModifier:
                 Control: Classic/Icon@2.5.0
                 Properties:
-                  Icon: =Icon.ChevronRight
+                  Icon: =Icon.Edit
                   Color: =RGBA(15, 108, 189, 1)
-                  X: =Parent.TemplateWidth - 56
-                  Y: =19
+                  X: =Parent.TemplateWidth - 48
+                  Y: =15
                   Width: =32
                   Height: =32
-            - btnResAnoCarte:
-                Control: Classic/Button@2.2.0
-                Properties:
-                  Text: =""
-                  X: =4
-                  Y: =4
-                  Width: =Parent.TemplateWidth - 8
-                  Height: =Parent.TemplateHeight - 8
-                  Fill: =RGBA(0, 0, 0, 0)
-                  HoverFill: =RGBA(15, 108, 189, 0.08)
-                  PressedFill: =RGBA(15, 108, 189, 0.18)
-                  BorderColor: =RGBA(200, 205, 212, 1)
-                  HoverBorderColor: =RGBA(15, 108, 189, 1)
-                  PressedBorderColor: =RGBA(15, 108, 189, 1)
-                  BorderThickness: =1
-                  RadiusTopLeft: =8
-                  RadiusTopRight: =8
-                  RadiusBottomLeft: =8
-                  RadiusBottomRight: =8
                   OnSelect: =Select(Parent)
+            - rectRecapSeparateur:
+                Control: Rectangle@2.3.0
+                Properties:
+                  Fill: =RGBA(225, 228, 232, 1)
+                  X: =0
+                  Y: =Parent.TemplateHeight - 1
+                  Width: =Parent.TemplateWidth
+                  Height: =1
       - btnResRetour:
           Control: Classic/Button@2.2.0
           Properties:
-            Text: ="Retour au formulaire"
+            Text: ="Modifier le formulaire"
             X: =40
             Y: =690
             Width: =280
@@ -187,11 +147,13 @@ Screens:
             Y: =690
             Width: =280
             Height: =56
-            DisplayMode: =If(IsEmpty(colAnomalies) && !locSoumissionEnCours, DisplayMode.Edit, DisplayMode.Disabled)
+            DisplayMode: =If(gblResteObligatoires + gblResteCommentaires + gblRestePhotos = 0 && !gblSoumissionBloquee && !locSoumissionEnCours, DisplayMode.Edit, DisplayMode.Disabled)
             OnSelect: |-
               =If(
                   !Connection.Connected,
                   Notify("Hors connexion : la soumission nécessite le réseau.", NotificationType.Warning),
+                  !(gblResteObligatoires + gblResteCommentaires + gblRestePhotos = 0 && !gblSoumissionBloquee),
+                  Notify("Des éléments obligatoires manquent : revenez au formulaire.", NotificationType.Warning),
                   !IsEmpty(Filter(colReponses, EtatSynchro <> "SYNCHRONISEE")) || !IsEmpty(Filter(colPhotos, EtatSynchro = "EN_ATTENTE")),
                   Notify("Des éléments ne sont pas encore enregistrés : revenez au formulaire et enregistrez le brouillon.", NotificationType.Warning),
                   UpdateContext({locSoumissionEnCours: true});

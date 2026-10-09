@@ -53,7 +53,7 @@ Screens:
             )
         );
         ClearCollect(colEtatQuestions, ForAll(colQuestionsFormulaire, {QuestionCode: QuestionCode, Visible: VisibleParDefaut}));
-        UpdateContext({locQuestionActive: "", locAfficherPanneauCommentaire: false, locAfficherPanneauPhotos: false, locEnregistrementEnCours: false, locQuitterApresEnregistrement: false, locAllerResume: false, locCamera: 0});
+        UpdateContext({locQuestionActive: "", locAfficherPanneauCommentaire: false, locAfficherPanneauPhotos: false, locEnregistrementEnCours: false, locQuitterApresEnregistrement: false, locAllerResume: false, locCamera: 0, locEnvoiPhotosEnCours: false});
         Reset(galInspQuestions);
         Select(btnInspEvaluer)
     Children:
@@ -106,13 +106,41 @@ Screens:
           Properties:
             Text: |-
               =If(
-                  gblResteObligatoires + gblResteCommentaires + gblRestePhotos = 0,
+                  gblResteObligatoires + gblResteCommentaires + gblRestePhotos = 0 && !gblSoumissionBloquee,
                   "✔ Tout ce qui est obligatoire est complété",
                   "Reste " & gblResteObligatoires & " question(s)"
                   & If(gblRestePhotos > 0, ", " & gblRestePhotos & " photo(s)", "")
                   & If(gblResteCommentaires > 0, ", " & gblResteCommentaires & " commentaire(s)", "")
+                  & If(gblSoumissionBloquee, ", 1 blocage", "")
+                  & "  ›"
               )
-            Color: =If(gblResteObligatoires + gblResteCommentaires + gblRestePhotos = 0, RGBA(16, 124, 16, 1), RGBA(96, 94, 92, 1))
+            Color: =If(gblResteObligatoires + gblResteCommentaires + gblRestePhotos = 0 && !gblSoumissionBloquee, RGBA(16, 124, 16, 1), RGBA(15, 108, 189, 1))
+            OnSelect: |-
+              =// Aller à la prochaine question à compléter (réponse, photo, commentaire ou blocage), surlignée dans la liste
+              With(
+                  {
+                      wCible: First(
+                          Sort(
+                              Filter(
+                                  colEtatComplet As wE,
+                                  (
+                                      wE.ObligatoireEff && wE.TypeQuestion <> "PHOTO"
+                                          && With({wR: LookUp(colReponses, QuestionCode = wE.QuestionCode)}, IsBlank(wR.Valeur) && IsBlank(wR.ValeurNumerique))
+                                  )
+                                  || (
+                                      wE.Visible
+                                          && CountRows(Filter(colPhotos, QuestionCode = wE.QuestionCode))
+                                              < If(wE.TypeQuestion = "PHOTO" && wE.ObligatoireEff, Max(1, wE.PhotosMin), wE.PhotosMin)
+                                  )
+                                  || (wE.CommentaireObligatoireEff && IsBlank(LookUp(colReponses, QuestionCode = wE.QuestionCode).Commentaire))
+                                  || !IsEmpty(Filter(colReglesEval, Vraie && Action = "BLOQUER_SOUMISSION" && QuestionSource = wE.QuestionCode))
+                              ),
+                              OrdreAffichage
+                          )
+                      ).QuestionCode
+                  },
+                  If(!IsBlank(wCible), Set(gblQuestionCible, wCible); Reset(galInspQuestions))
+              )
             Align: =Align.Right
             X: =940
             Y: =16
@@ -264,7 +292,7 @@ Screens:
                     =With(
                         {wN: LookUp(colReponses, QuestionCode = ThisItem.QuestionCode).ValeurNumerique},
                         If(
-                            ThisItem.CalculBloque, "Calcul impossible : épaisseur sans corrosion égale à 0",
+                            ThisItem.CalculBloque, "⛔ Calcul impossible : l'épaisseur sans corrosion ne peut pas être 0",
                             IsBlank(wN), "Calcul automatique : saisir les deux épaisseurs",
                             "Perte calculée : " & Text(Round(wN, 1)) & " %"
                         )
@@ -555,17 +583,18 @@ Screens:
       - btnInspResume:
           Control: Classic/Button@2.2.0
           Properties:
-            Text: ="Résumé et soumission"
+            Text: ="Valider l'inspection"
             X: =540
             Y: =690
             Width: =280
             Height: =56
+            DisplayMode: =If(gblResteObligatoires + gblResteCommentaires + gblRestePhotos = 0 && !gblSoumissionBloquee && !locEnregistrementEnCours, DisplayMode.Edit, DisplayMode.Disabled)
             OnSelect: |-
               =If(
                   IsEmpty(Filter(colReponses, EtatSynchro <> "SYNCHRONISEE")) && IsEmpty(Filter(colPhotos, EtatSynchro = "EN_ATTENTE")),
                   Navigate(Screen_Resume, ScreenTransition.None),
                   !Connection.Connected,
-                  Notify("Hors connexion : enregistrez au retour du réseau avant le résumé.", NotificationType.Warning),
+                  Notify("Hors connexion : la validation nécessite le réseau.", NotificationType.Warning),
                   UpdateContext({locAllerResume: true});
                   Select(btnInspEnregistrer)
               )
@@ -1026,19 +1055,21 @@ Screens:
                         CountRows(Filter(colPhotos, QuestionCode = locQuestionActive)) >= LookUp(colQuestions, QuestionCode = locQuestionActive).NbPhotosMax,
                         Notify("Nombre maximal de photos atteint pour cette question.", NotificationType.Warning),
                         With(
-                            {wNow: Now()},
+                            {wNow: Now(), wSrc: Substitute(JSON(Self.Photo, JSONFormat.IncludeBinaryData), Char(34), "")},
                             Collect(
                                 colPhotos,
                                 {
                                     PhotoLocaleID: Text(GUID()),
                                     QuestionCode: locQuestionActive,
-                                    Source: Substitute(JSON(Self.Photo, JSONFormat.IncludeBinaryData), Char(34), ""),
-                                    NomFichier: locQuestionActive & "_" & Text(wNow, "yyyymmdd_hhmmss") & "_" & Left(Text(GUID()), 4) & ".jpg",
+                                    Source: wSrc,
+                                    NomFichier: locQuestionActive & "_" & Text(wNow, "yyyymmdd_hhmmss") & "_" & Left(Text(GUID()), 4)
+                                        & If(StartsWith(wSrc, "data:image/png"), ".png", ".jpg"),
                                     DatePhoto: wNow,
                                     EtatSynchro: "EN_ATTENTE"
                                 }
                             )
                         );
+                        Notify("Photo " & CountRows(Filter(colPhotos, QuestionCode = locQuestionActive)) & " ajoutée.", NotificationType.Success, 1500);
                         // Question de type PHOTO : réponse PHOTO_CAPTURED dès la première photo (DEC-10)
                         With(
                             {wEx: LookUp(colReponses, QuestionCode = locQuestionActive)},
@@ -1117,10 +1148,41 @@ Screens:
             - btnPhotoFermer:
                 Control: Classic/Button@2.2.0
                 Properties:
-                  Text: ="Fermer"
-                  X: =936
+                  Text: |-
+                    ="Terminé (" & CountRows(Filter(colPhotos, QuestionCode = locQuestionActive)) & " photo(s))"
+                  X: =886
                   Y: =620
-                  Width: =200
+                  Width: =250
                   Height: =52
+                  DisplayMode: =If(locEnvoiPhotosEnCours, DisplayMode.Disabled, DisplayMode.Edit)
                   OnSelect: |-
-                    =UpdateContext({locAfficherPanneauPhotos: false})
+                    =UpdateContext({locEnvoiPhotosEnCours: true});
+                    // Envoi immédiat des photos prises (réparti au fil de l'inspection) ; hors connexion, elles restent « À envoyer »
+                    If(
+                        Connection.Connected && !IsEmpty(Filter(colPhotos, EtatSynchro = "EN_ATTENTE")),
+                        ClearCollect(colPhotosAEnvoyer, Filter(colPhotos, EtatSynchro = "EN_ATTENTE"));
+                        ForAll(
+                            colPhotosAEnvoyer As wP,
+                            IfError(
+                                LUWA_EnvoyerPhoto.Run(
+                                    gblInspectionGUID,
+                                    wP.QuestionCode,
+                                    gblNomOuvrage,
+                                    wP.NomFichier,
+                                    Text(DateAdd(wP.DatePhoto, TimeZoneOffset(wP.DatePhoto), TimeUnit.Minutes), "yyyy-mm-ddThh:mm:ssZ"),
+                                    "COMPRESSEE",
+                                    wP.Source,
+                                    User().Email
+                                );
+                                Patch(colPhotos, LookUp(colPhotos, PhotoLocaleID = wP.PhotoLocaleID), {EtatSynchro: "ENVOYEE"});
+                                true,
+                                false
+                            )
+                        );
+                        IfError(SaveData(colPhotos, "luwa_photos"), false)
+                    );
+                    UpdateContext({locEnvoiPhotosEnCours: false, locAfficherPanneauPhotos: false});
+                    If(
+                        !IsEmpty(Filter(colPhotos, EtatSynchro = "EN_ATTENTE")),
+                        Notify("Photos conservées sur l'appareil : elles seront envoyées à l'enregistrement.", NotificationType.Information)
+                    )
