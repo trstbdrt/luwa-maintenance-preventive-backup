@@ -91,6 +91,7 @@ en DEC-11 et DEC-12 et dans `docs/reviews/build-readiness-v0.1.3.md`.
 | PA-19 | Soumission (TERMINE, DateSoumission) | P1 | PA-18 |
 | PA-20 | Screen_History : recherche et consultation en lecture seule, y compris INACCESSIBLE et ARCHIVE | P1 | PA-05 |
 | PA-21 | Préparation hors connexion (SaveData / LoadData sur les collections de travail) | P3 | PA-16 |
+| PA-22 | **Lot 2b — tournée hors ligne (À REDISCUTER AVANT IMPLÉMENTATION)** : démarrage sans réseau (catalogues en local), création d'inspection hors ligne, file locale jusqu'à 15 inspections avec photos (un fichier local par inspection et par lot de photos), compteur « à synchroniser », synchronisation automatique inspection par inspection (contrôle d'existence par InspectionGUID), blocage à 15 en attente. Hypothèses : coupures de quelques heures, ~15 inspections, photos hors ligne | P2 | Lot 3 (PA-15, PA-16, PAU-06), DEC-24, DEC-25 |
 
 ---
 
@@ -131,6 +132,7 @@ en DEC-11 et DEC-12 et dans `docs/reviews/build-readiness-v0.1.3.md`.
 | TST-18 | Volumétrie : requêtes filtrées sur colonnes indexées au-delà de 5 000 éléments (REPONSES) | P2 | SP-09, PA-16 |
 | TST-19 | Export : contenu de Export.zip, rattachement photo ↔ question | P1 | PAU-01 |
 | TEST-DELEGATION-001 | **Délégation sur volume** (site de test) : avec plus de 5 000 éléments dans INSPECTIONS et plus de 20 000 dans REPONSES, vérifier que les filtres sur `Inspecteur` (reprise, DEC-09), `NomOuvrage` (identification, historique) et `InspectionGUID` (REPONSES, PHOTOS_INSPECTIONS) ne produisent aucun avertissement de délégation dans Studio, retournent les éléments situés au-delà des 2 000 premiers ; temps de réponse mesuré et consigné. Principal risque technique (technical design PA-2) | P1 | SP-13, PA-03, PA-05, PA-20 |
+| TEST-OFFLINE-001 | Tablette en mode avion : 15 inspections poteau avec 5 photos chacune, application fermée et rouverte entre chaque ; retour du réseau : 15 inspections et 75 photos dans SharePoint, sans perte ni doublon ; temps de synchronisation et mémoire mesurés | P1 | PA-22 |
 
 ---
 

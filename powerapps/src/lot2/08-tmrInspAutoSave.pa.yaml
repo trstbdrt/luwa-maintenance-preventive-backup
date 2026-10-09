@@ -1,0 +1,14 @@
+- tmrInspAutoSave:
+    Control: Timer
+    Properties:
+      Duration: =60000
+      Repeat: =true
+      AutoStart: =true
+      Visible: =false
+      OnTimerEnd: |-
+        =If(
+            Connection.Connected
+                && !locEnregistrementEnCours
+                && !IsEmpty(Filter(colReponses, EtatSynchro <> "SYNCHRONISEE")),
+            Select(btnInspEnregistrer)
+        )

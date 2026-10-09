@@ -1,0 +1,302 @@
+Screens:
+  Screen_Home:
+    Properties:
+      Fill: =RGBA(245, 247, 250, 1)
+      OnVisible: |-
+        =UpdateContext({locAfficherReprise: false, locInspectionAAbandonner: Blank(), locOperationEnCours: false});
+        // Protection hors connexion : inspection restée sur l'appareil sans être enregistrée dans SharePoint
+        IfError(LoadData(colReponsesLocales, "luwa_reponses", true), false);
+        IfError(LoadData(colContexteLocal, "luwa_contexte", true), false);
+        UpdateContext({
+            locRecupDisponible: !IsEmpty(Filter(colReponsesLocales, EtatSynchro <> "SYNCHRONISEE")) && !IsEmpty(colContexteLocal)
+        })
+    Children:
+      - lblHomeTitre:
+          Control: Label@2.5.1
+          Properties:
+            Text: ="LUWA – Inspection maintenance préventive (secours)"
+            X: =40
+            Y: =30
+            Width: =1000
+            Height: =60
+            Size: =24
+            FontWeight: =FontWeight.Semibold
+      - lblHomeUtilisateur:
+          Control: Label@2.5.1
+          Properties:
+            Text: =gblUtilisateur.NomAffiche
+            X: =1040
+            Y: =30
+            Width: =300
+            Height: =60
+            Align: =Align.Right
+      - btnHomeNouvelle:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Text: ="Nouvelle inspection"
+            X: =40
+            Y: =130
+            Width: =360
+            Height: =90
+            Size: =18
+            DisplayMode: =If(locRecupDisponible, DisplayMode.Disabled, DisplayMode.Edit)
+            OnSelect: |-
+              =Set(gblTypeInspection, "");
+              Set(gblNomOuvrage, "");
+              Set(gblInspectionGUID, "");
+              Set(gblInspectionID, "");
+              Set(gblInspection, Blank());
+              Clear(colHistoriqueOuvrage);
+              Navigate(Screen_Type, ScreenTransition.None)
+      - btnHomeReprendre:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Text: ="Reprendre inspection"
+            X: =40
+            Y: =240
+            Width: =360
+            Height: =90
+            Size: =18
+            OnSelect: |-
+              =ClearCollect(
+                  colInspectionsAReprendre,
+                  Sort(
+                      Filter(
+                          INSPECTIONS,
+                          Inspecteur.Email = gblUtilisateur.Email
+                              && (StatutInspection.Value = "BROUILLON" || StatutInspection.Value = "EN_COURS")
+                      ),
+                      DateDerniereModification,
+                      SortOrder.Descending
+                  )
+              );
+              UpdateContext({locAfficherReprise: true})
+      - btnHomeHistorique:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Text: ="Historique"
+            X: =40
+            Y: =350
+            Width: =360
+            Height: =90
+            Size: =18
+            OnSelect: |-
+              =Set(gblInspectionConsultee, Blank());
+              Set(gblEcranRetourHistorique, Screen_Home);
+              Navigate(Screen_History, ScreenTransition.None)
+      - lblHomeRecup:
+          Control: Label@2.5.1
+          Properties:
+            Visible: =locRecupDisponible
+            Text: |-
+              ="⚠ L'inspection " & First(colContexteLocal).InspectionID & " (" & First(colContexteLocal).NomOuvrage & ") contient "
+              & CountRows(Filter(colReponsesLocales, EtatSynchro <> "SYNCHRONISEE"))
+              & " modification(s) non enregistrée(s), conservée(s) sur cet appareil."
+            Color: =RGBA(176, 96, 0, 1)
+            Fill: =RGBA(255, 244, 222, 1)
+            X: =40
+            Y: =470
+            Width: =360
+            Height: =130
+            PaddingLeft: =12
+            PaddingRight: =12
+      - btnHomeRecup:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Visible: =locRecupDisponible
+            Text: ="Reprendre et enregistrer"
+            X: =40
+            Y: =610
+            Width: =360
+            Height: =60
+            OnSelect: |-
+              =With(
+                  {wC: First(colContexteLocal)},
+                  Set(gblInspectionGUID, wC.InspectionGUID);
+                  Set(gblInspectionID, wC.InspectionID);
+                  Set(gblTypeInspection, wC.TypeInspection);
+                  Set(gblNomOuvrage, wC.NomOuvrage)
+              );
+              Set(gblRepriseLocale, true);
+              Navigate(Screen_Inspection, ScreenTransition.None)
+      - lblHomeRepriseTitre:
+          Control: Label@2.5.1
+          Properties:
+            Text: ="Mes inspections à reprendre"
+            Visible: =locAfficherReprise
+            X: =440
+            Y: =130
+            Width: =880
+            Height: =40
+            FontWeight: =FontWeight.Semibold
+      - lblHomeRepriseVide:
+          Control: Label@2.5.1
+          Properties:
+            Text: ="Aucune inspection en brouillon ou en cours."
+            Visible: =locAfficherReprise && IsEmpty(colInspectionsAReprendre)
+            X: =440
+            Y: =180
+            Width: =880
+            Height: =40
+      - galHomeReprise:
+          Control: Gallery@2.15.0
+          Variant: BrowseLayout_Vertical_TwoTextOneImageVariant_ver5.0
+          Properties:
+            Items: =colInspectionsAReprendre
+            Visible: =locAfficherReprise
+            X: =440
+            Y: =180
+            Width: =880
+            Height: =540
+            TemplateSize: =80
+            OnSelect: |-
+              =If(
+                  locRecupDisponible && First(colContexteLocal).InspectionGUID <> ThisItem.InspectionGUID,
+                  Notify("Enregistrez d'abord l'inspection " & First(colContexteLocal).InspectionID & " restée sur l'appareil.", NotificationType.Warning),
+                  Set(gblInspection, ThisItem);
+                  Set(gblInspectionGUID, ThisItem.InspectionGUID);
+                  Set(gblInspectionID, ThisItem.InspectionID);
+                  Set(gblTypeInspection, ThisItem.TypeInspection.Value);
+                  Set(gblNomOuvrage, ThisItem.NomOuvrage);
+                  // Si cette inspection a des réponses non enregistrées sur l'appareil, on repart de la copie locale
+                  Set(gblRepriseLocale, locRecupDisponible && First(colContexteLocal).InspectionGUID = ThisItem.InspectionGUID);
+                  Navigate(Screen_Inspection, ScreenTransition.None)
+              )
+          Children:
+            - lblRepriseLigne1:
+                Control: Label@2.5.1
+                Properties:
+                  OnSelect: =Select(Parent)
+                  Text: =ThisItem.InspectionID & "  –  " & ThisItem.NomOuvrage
+                  X: =16
+                  Y: =8
+                  Width: =Parent.TemplateWidth - 250
+                  Height: =32
+                  FontWeight: =FontWeight.Semibold
+            - lblRepriseLigne2:
+                Control: Label@2.5.1
+                Properties:
+                  OnSelect: =Select(Parent)
+                  Text: |-
+                    =ThisItem.TypeInspection.Value & "  ·  " & ThisItem.StatutInspection.Value
+                    & "  ·  modifiée le " & Text(ThisItem.DateDerniereModification, "dd/mm/yyyy hh:mm")
+                  X: =16
+                  Y: =40
+                  Width: =Parent.TemplateWidth - 250
+                  Height: =30
+                  Size: =12
+            - icoRepriseOuvrir:
+                Control: Classic/Icon@2.5.0
+                Properties:
+                  Icon: =Icon.ChevronRight
+                  Color: =RGBA(15, 108, 189, 1)
+                  X: =Parent.TemplateWidth - 230
+                  Y: =(Parent.TemplateHeight - 32) / 2
+                  Width: =32
+                  Height: =32
+            - btnRepriseCarte:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  Text: =""
+                  X: =4
+                  Y: =4
+                  Width: =Parent.TemplateWidth - 186
+                  Height: =Parent.TemplateHeight - 8
+                  Fill: =RGBA(0, 0, 0, 0)
+                  HoverFill: =RGBA(15, 108, 189, 0.08)
+                  PressedFill: =RGBA(15, 108, 189, 0.18)
+                  BorderColor: =RGBA(200, 205, 212, 1)
+                  HoverBorderColor: =RGBA(15, 108, 189, 1)
+                  PressedBorderColor: =RGBA(15, 108, 189, 1)
+                  BorderThickness: =1
+                  RadiusTopLeft: =8
+                  RadiusTopRight: =8
+                  RadiusBottomLeft: =8
+                  RadiusBottomRight: =8
+                  OnSelect: =Select(Parent)
+            - btnRepriseAbandonner:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  Text: ="Abandonner"
+                  X: =Parent.TemplateWidth - 170
+                  Y: =18
+                  Width: =150
+                  Height: =44
+                  Size: =12
+                  OnSelect: |-
+                    =UpdateContext({locInspectionAAbandonner: ThisItem})
+      - rectHomeVoile:
+          Control: Rectangle@2.3.0
+          Properties:
+            Visible: =!IsBlank(locInspectionAAbandonner)
+            Fill: =RGBA(0, 0, 0, 0.4)
+            X: =0
+            Y: =0
+            Width: =Parent.Width
+            Height: =Parent.Height
+      - conHomeAbandon:
+          Control: GroupContainer@1.3.0
+          Variant: ManualLayout
+          Properties:
+            Visible: =!IsBlank(locInspectionAAbandonner)
+            Fill: =RGBA(255, 255, 255, 1)
+            X: =383
+            Y: =234
+            Width: =600
+            Height: =300
+          Children:
+            - lblAbandonTexte:
+                Control: Label@2.5.1
+                Properties:
+                  Text: |-
+                    ="Abandonner l'inspection " & locInspectionAAbandonner.InspectionID
+                    & " (" & locInspectionAAbandonner.NomOuvrage & ") ?"
+                    & Char(10) & "Elle ne sera ni supprimée ni modifiable : elle disparaît de la reprise"
+                    & " et ne déclenche plus l'avertissement de concurrence."
+                  X: =30
+                  Y: =20
+                  Width: =540
+                  Height: =160
+            - btnAbandonConfirmer:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  Text: ="Confirmer l'abandon"
+                  X: =30
+                  Y: =210
+                  Width: =260
+                  Height: =60
+                  DisplayMode: =If(locOperationEnCours, DisplayMode.Disabled, DisplayMode.Edit)
+                  OnSelect: |-
+                    =UpdateContext({locOperationEnCours: true});
+                    IfError(
+                        Patch(
+                            INSPECTIONS,
+                            LookUp(INSPECTIONS, InspectionGUID = locInspectionAAbandonner.InspectionGUID),
+                            {StatutInspection: {Value: "ABANDONNE"}, DateDerniereModification: Now()}
+                        );
+                        Notify("Inspection abandonnée.", NotificationType.Success),
+                        Notify("Abandon impossible : " & FirstError.Message, NotificationType.Error)
+                    );
+                    ClearCollect(
+                        colInspectionsAReprendre,
+                        Sort(
+                            Filter(
+                                INSPECTIONS,
+                                Inspecteur.Email = gblUtilisateur.Email
+                                    && (StatutInspection.Value = "BROUILLON" || StatutInspection.Value = "EN_COURS")
+                            ),
+                            DateDerniereModification,
+                            SortOrder.Descending
+                        )
+                    );
+                    UpdateContext({locInspectionAAbandonner: Blank(), locOperationEnCours: false})
+            - btnAbandonAnnuler:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  Text: ="Annuler"
+                  X: =320
+                  Y: =210
+                  Width: =200
+                  Height: =60
+                  OnSelect: |-
+                    =UpdateContext({locInspectionAAbandonner: Blank()})

@@ -23,6 +23,8 @@ Décisions précédentes : DEC-01 à DEC-17
 | DEC-21 | Nom d'ouvrage | Comparaison insensible à la casse ; enregistré en majuscules ; espaces conservés | Revue P4 |
 | DEC-22 | Dernière inspection d'un ouvrage | Dernière inspection du même type d'inspection | Revue P5 |
 | DEC-23 | Date de l'InspectionID final | AAAAMMJJ calculé en heure belge (Europe/Brussels) | Revue P6 |
+| DEC-24 | Résolution des photos | Capture par le contrôle Appareil photo (résolution proche de l'écran) ; pas de capture pleine résolution | Revue volumétrie |
+| DEC-25 | Protection hors connexion | Copie locale de l'inspection en cours, récupération au démarrage, enregistrement différé ; application mobile Power Apps | Revue couverture réseau |
 
 ---
 
@@ -139,3 +141,44 @@ Dans `INS-AAAAMMJJ-NNNNNN` (DEC-14), la date `AAAAMMJJ` est la DateCreation **co
 
 - SharePoint stocke les dates en UTC : le flux PAU-04 convertit DateCreation avant de formater la date.
 - Une inspection créée à 00 h 30 heure belge porte la date du jour, et non celle de la veille.
+
+---
+
+# DEC-24 — Résolution des photos
+
+## Contexte
+
+Environ 250 formulaires par jour et 4 à 5 photos minimum par inspection poteau : en pleine résolution (3 à 4 Mo),
+plusieurs gigaoctets par jour sur le quota SharePoint de l'organisation (OQ-06 « compression désactivée » réexaminée).
+
+## Décision
+
+- Les photos sont capturées avec le contrôle **Appareil photo** de Power Apps, dont la résolution est proche de celle de l'écran.
+- Pas d'import en pleine résolution depuis l'appareil photo natif dans le prototype.
+- CompressionVersion = COMPRESSEE pour ces photos.
+
+## Conséquences
+
+- Volume par photo divisé environ par 10.
+- Lot 3 : panneau photos construit sur le contrôle Appareil photo ; import depuis la galerie à réévaluer si nécessaire.
+
+---
+
+# DEC-25 — Protection hors connexion
+
+## Contexte
+
+Couverture 4G incomplète en Wallonie : sans protection, une fermeture de l'application ou une perte de réseau fait perdre les réponses non enregistrées.
+
+## Décision
+
+- Après chaque modification, l'inspection en cours (contexte et réponses) est copiée sur l'appareil (SaveData).
+- Au démarrage, une inspection non synchronisée est proposée à la reprise (« Reprendre et enregistrer »).
+- Enregistrement automatique dès que le réseau est disponible (toutes les 60 s) et avant le retour à l'accueil.
+- Les tablettes utilisent l'**application mobile Power Apps** (SaveData / LoadData n'y sont pleinement pris en charge que là).
+- Création d'une inspection sans réseau : lot 2b.
+
+## Conséquences
+
+- Tant qu'une inspection locale n'est pas enregistrée, « Nouvelle inspection » est désactivée et la reprise d'une autre inspection est refusée, pour ne pas écraser la copie locale.
+
