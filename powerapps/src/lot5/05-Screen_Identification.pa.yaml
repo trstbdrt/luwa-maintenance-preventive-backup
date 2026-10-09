@@ -88,20 +88,7 @@ Screens:
             Visible: =false
             Text: |-
               =// DEC-29 : saisie nettoyée (majuscules, caractères interdits par SharePoint retirés, espaces simples, pas d'espace autour du tiret)
-              Substitute(
-                  Substitute(
-                      Trim(
-                          Concat(
-                              ForAll(Sequence(Len(txtIdentOuvrage.Text)) As wI, {C: Upper(Mid(txtIdentOuvrage.Text, wI.Value, 1))}),
-                              If(C in [Char(34), "*", ":", "<", ">", "?", "/", "\", "|", "#", "%", "~", "&", Char(9)], "", C)
-                          )
-                      ),
-                      " -",
-                      "-"
-                  ),
-                  "- ",
-                  "-"
-              )
+              Substitute(Substitute(Trim(Substitute(Substitute(Substitute(Substitute(Substitute(Substitute(Substitute(Substitute(Substitute(Substitute(Substitute(Substitute(Substitute(Substitute(Upper(txtIdentOuvrage.Text), Char(34), ""), "*", ""), ":", ""), "<", ""), ">", ""), "?", ""), "/", ""), "\", ""), "|", ""), "#", ""), "%", ""), "~", ""), "&", ""), Char(9), " ")), " -", "-"), "- ", "-")
             X: =40
             Y: =170
             Width: =10
