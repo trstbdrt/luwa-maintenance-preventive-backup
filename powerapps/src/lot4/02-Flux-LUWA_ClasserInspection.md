@@ -98,7 +98,7 @@ l'historique de l'application retrouve toujours les photos.
 
 | Champ | Valeur |
 |------|------|
-| Folder Path | `/LUWA_temp` |
+| Folder Path | `/` (racine du OneDrive ; le fichier est supprimé à l'étape 6d) |
 | File Name | Expression : `concat(triggerBody()?['InspectionGUID'],'.html')` |
 | File Content | Expression : `coalesce(triggerBody()?['RapportHTML'],concat('<html><head><meta charset="utf-8"></head><body><h1>',triggerBody()?['NomOuvrage'],'</h1><p>Rapport non disponible (inspection antérieure au lot 4).</p></body></html>'))` |
 
