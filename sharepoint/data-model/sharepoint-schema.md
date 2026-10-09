@@ -272,18 +272,17 @@ Questions PHOTO (POT_010, LUM_012) : une ligne REPONSES est créée avec Valeur 
 
 Stockage physique.
 
-## Structure recommandée
+## Structure
 
 PHOTOS_INSPECTIONS
 
-    550e8400-e29b-41d4-a716-446655440000/
+    _EN_COURS/<InspectionGUID>/            photos d'une inspection non soumise (flux PAU-06)
+    <poteau>/<date TYPE identifiant>/      inspection soumise ou inaccessible (flux PAU-07)
+        Rapport ….pdf, Reponses ….csv, photos
+    <poteau>/<luminaire>/<date TYPE identifiant>/
 
-        Photo001.jpg
-
-        Photo002.jpg
-
-Un dossier par inspection, nommé par son **InspectionGUID**, jamais par InspectionID.
-Aucun renommage ultérieur, notamment lors de l'attribution de l'InspectionID final (DEC-15).
+Les photos sont déplacées (pas copiées) à la soumission ; elles restent identifiées par InspectionGUID (DEC-29,
+remplace DEC-15 pour l'emplacement).
 
 ---
 
@@ -291,12 +290,16 @@ Aucun renommage ultérieur, notamment lors de l'attribution de l'InspectionID fi
 
 | Nom | Type SharePoint | Obligatoire | Index |
 |------|------|------|------|
-| InspectionGUID | Single line text | Oui | Oui |
-| QuestionCode | Single line text | Oui | Oui |
-| NomOuvrage | Single line text | Oui | Oui |
-| Auteur | Person | Oui | Non |
-| DatePhoto | DateTime | Oui | Oui |
+| InspectionGUID | Single line text | Non (1) | Oui |
+| QuestionCode | Single line text | Non (1) | Oui |
+| NomOuvrage | Single line text | Non (1) | Oui |
+| Auteur | Person | Non (1) | Non |
+| DatePhoto | DateTime | Non (1) | Oui |
 | CompressionVersion | Choice | Non | Non |
+
+(1) Non obligatoires dans SharePoint depuis le lot 4 : le rapport PDF et le CSV déposés par PAU-07 n'ont pas ces
+métadonnées. Elles restent toujours remplies pour les photos (flux PAU-06). Les rapports n'ont volontairement pas
+d'InspectionGUID, pour ne pas apparaître parmi les photos dans l'application.
 
 ## Valeurs CompressionVersion
 
